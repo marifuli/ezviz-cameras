@@ -13,3 +13,12 @@ docker run -d \
   -v /Users/ariful/Developer/Personal_Projects/ezviz-camera/web-app/public/recordings:/recordings \
   bluenviron/mediamtx:1-ffmpeg
 
+
+Size: 512x288
+Fps: 10 fps 
+✅ Summary of sizes
+Cameras	Days	Storage per camera	Total
+140	    10	    6.48 GB	            907 GB
+- So roughly ~1 TB to keep last 10 days at this resolution and FPS.
+
+

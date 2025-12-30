@@ -7,7 +7,7 @@
     <form method="GET" action="{{ route('dashboard') }}" class="mb-8 flex">
         <div style="width: 100%" class="ml-2">
             <label for="stores" class="block text-sm font-medium text-gray-700 mb-2">Select Stores:</label>
-            <select name="stores[]" id="stores" multiple class="block w-full">
+            <select name="stores[]" id="stores" multiple class="block w-full" required>
                 @foreach($stores as $store)
                     <option value="{{ $store->id }}" {{ in_array($store->id, $selectedStoreIds) ? 'selected' : '' }}>{{ $store->name }}</option>
                 @endforeach

@@ -21,6 +21,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/password/change', [AuthController::class, 'showChangePassword'])->name('password.change');
     Route::post('/password/change', [AuthController::class, 'changePassword']);
 
+    Route::get('cameras/playback', [CameraController::class, 'playback'])
+        ->name('cameras.playback');
     Route::resource('cameras', CameraController::class);
     Route::resource('stores', StoreController::class);
 });

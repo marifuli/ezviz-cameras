@@ -13,9 +13,9 @@ class DashboardController extends Controller
         $stores = Store::all();
 
         // Get selected store IDs from request, default to first store if none
-        $selectedStoreIds = $request->input('stores', []);
+        $selectedStoreIds = $request->input('stores', [0]);
         if (empty($selectedStoreIds) && $stores->isNotEmpty()) {
-            $selectedStoreIds = [$stores->first()->id];
+            $selectedStoreIds = [$stores->first()?->id];
         }
 
         // Get cameras from selected stores
