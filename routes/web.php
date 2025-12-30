@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CameraController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\StoreController;
 
 Route::redirect('/', '/dashboard');
@@ -15,9 +16,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/password/change', [AuthController::class, 'showChangePassword'])->name('password.change');
     Route::post('/password/change', [AuthController::class, 'changePassword']);

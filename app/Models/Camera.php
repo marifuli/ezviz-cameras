@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Service\MediaMtxService;
 use Illuminate\Database\Eloquent\Model;
 
 class Camera extends Model
@@ -15,8 +16,28 @@ class Camera extends Model
         'password',
     ];
 
+    static function boot()
+    {
+        parent::boot();
+        self::created(function ($model) {
+            MediaMtxService::updateMediaMtxConfig();
+        });
+        self::updated(function ($model) {
+            MediaMtxService::updateMediaMtxConfig();
+        });
+        self::deleted(function ($model) {
+            MediaMtxService::updateMediaMtxConfig();
+        });
+    }
+
     public function store()
     {
         return $this->belongsTo(Store::class);
+    }
+
+    public function getHlsUrlAttribute()
+    {
+        $mediamtxIp = config('services.mediamtx.ip');
+        return "http://{$mediamtxIp}:8888/{$this->name}/index.m3u8";
     }
 }

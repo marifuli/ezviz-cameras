@@ -25,6 +25,7 @@ class CameraController extends Controller
      */
     public function index()
     {
+        // dd(MediaMtxService::updateMediaMtxConfig());
         $cameras = Camera::all();
         return view('cameras.index', compact('cameras'));
     }
