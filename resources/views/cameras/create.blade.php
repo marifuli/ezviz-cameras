@@ -8,6 +8,16 @@
         @csrf
 
         <div class="mb-3">
+            <label for="store_id" class="form-label">Store</label>
+            <select class="form-control select2" id="store_id" name="store_id" required>
+                <option value="">Select Store</option>
+                @foreach($stores as $store)
+                    <option value="{{ $store->id }}">{{ $store->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="mb-3">
             <label for="name" class="form-label">Name</label>
             <input type="text" class="form-control" id="name" name="name" required>
         </div>
@@ -19,7 +29,7 @@
 
         <div class="mb-3">
             <label for="port" class="form-label">Port</label>
-            <input type="number" class="form-control" id="port" name="port" value="554" required>
+            <input type="number" class="form-control" id="port" name="port" value="8000" required>
         </div>
 
         <div class="mb-3">
@@ -32,18 +42,16 @@
             <input type="password" class="form-control" id="password" name="password" required>
         </div>
 
-        <div class="mb-3">
-            <label for="wifi_ssid" class="form-label">WiFi SSID (Optional)</label>
-            <input type="text" class="form-control" id="wifi_ssid" name="wifi_ssid">
-        </div>
-
-        <div class="mb-3">
-            <label for="wifi_password" class="form-label">WiFi Password (Optional)</label>
-            <input type="password" class="form-control" id="wifi_password" name="wifi_password">
-        </div>
-
         <button type="submit" class="btn btn-primary">Add Camera</button>
         <a href="{{ route('cameras.index') }}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    $(document).ready(function() {
+        $('.select2').select2();
+    });
+</script>
 @endsection

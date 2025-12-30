@@ -7,18 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class Camera extends Model
 {
     protected $fillable = [
-        'user_id',
+        'store_id',
         'name',
         'ip_address',
         'port',
         'username',
         'password',
-        'wifi_ssid',
-        'wifi_password',
     ];
 
-    public function user()
+    public function store()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Store::class);
     }
 }

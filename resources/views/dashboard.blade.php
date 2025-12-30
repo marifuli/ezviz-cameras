@@ -2,16 +2,34 @@
 
 @section('content')
 <div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="mt-4">Dashboard</h1>
+            <p>Welcome to the Ezviz Camera Management System.</p>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
                 <div class="card-header">
-                    <h3>Dashboard</h3>
+                    <h5>Stores</h5>
                 </div>
                 <div class="card-body">
-                    <h4>Welcome, {{ Auth::user()->name }}!</h4>
-                    <p>You are logged in.</p>
-                    <a href="{{ route('cameras.index') }}" class="btn btn-primary">Manage Cameras</a>
+                    <p>Manage your stores.</p>
+                    <a href="{{ route('stores.index') }}" class="btn btn-primary">View Stores</a>
+                    <a href="{{ route('stores.create') }}" class="btn btn-secondary">Add Store</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Cameras</h5>
+                </div>
+                <div class="card-body">
+                    <p>Manage your cameras.</p>
+                    <a href="{{ route('cameras.index') }}" class="btn btn-primary">View Cameras</a>
+                    <a href="{{ route('cameras.create') }}" class="btn btn-secondary">Add Camera</a>
                 </div>
             </div>
         </div>

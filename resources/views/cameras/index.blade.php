@@ -10,12 +10,13 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <table class="table table-striped">
+    <table id="cameras-table" class="table table-striped">
         <thead>
             <tr>
                 <th>Name</th>
+                <th>Store</th>
                 <th>IP Address</th>
-                <th>Port</th>
+                <th>RTSP Port</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -23,9 +24,10 @@
             @forelse($cameras as $camera)
                 <tr>
                     <td>{{ $camera->name }}</td>
+                    <td>{{ $camera->store->name }}</td>
                     <td>{{ $camera->ip_address }}</td>
                     <td>{{ $camera->port }}</td>
-                    <td>
+                    <td style="width: 200px">
                         <a href="{{ route('cameras.show', $camera) }}" class="btn btn-info btn-sm">View</a>
                         <a href="{{ route('cameras.edit', $camera) }}" class="btn btn-warning btn-sm">Edit</a>
                         <form action="{{ route('cameras.destroy', $camera) }}" method="POST" class="d-inline">
@@ -37,10 +39,18 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" class="text-center">No cameras found.</td>
+                    <td colspan="5" class="text-center">No cameras found.</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    $(document).ready(function() {
+        $('#cameras-table').DataTable();
+    });
+</script>
 @endsection

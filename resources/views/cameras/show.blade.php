@@ -7,14 +7,11 @@
     <div class="card">
         <div class="card-body">
             <h5 class="card-title">{{ $camera->name }}</h5>
+            <p class="card-text"><strong>Store:</strong> {{ $camera->store->name }}</p>
             <p class="card-text"><strong>IP Address:</strong> {{ $camera->ip_address }}</p>
-            <p class="card-text"><strong>Port:</strong> {{ $camera->port }}</p>
+            <p class="card-text"><strong>RTSP Port:</strong> {{ $camera->port }}</p>
             <p class="card-text"><strong>Username:</strong> {{ $camera->username }}</p>
             <p class="card-text"><strong>Password:</strong> {{ $camera->password }}</p>
-            @if($camera->wifi_ssid)
-                <p class="card-text"><strong>WiFi SSID:</strong> {{ $camera->wifi_ssid }}</p>
-                <p class="card-text"><strong>WiFi Password:</strong> {{ $camera->wifi_password }}</p>
-            @endif
         </div>
     </div>
 

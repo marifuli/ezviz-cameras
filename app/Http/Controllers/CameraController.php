@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Camera;
+use App\Models\Store;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,7 +25,7 @@ class CameraController extends Controller
      */
     public function index()
     {
-        $cameras = Auth::user()->cameras;
+        $cameras = Camera::all();
         return view('cameras.index', compact('cameras'));
     }
 
@@ -33,7 +34,8 @@ class CameraController extends Controller
      */
     public function create()
     {
-        return view('cameras.create');
+        $stores = Store::all();
+        return view('cameras.create', compact('stores'));
     }
 
     /**
@@ -42,13 +44,12 @@ class CameraController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'store_id' => 'required|exists:stores,id',
             'name' => 'required|string|max:255',
             'ip_address' => 'required|ip',
             'port' => 'required|integer|min:1|max:65535',
             'username' => 'required|string|max:255',
             'password' => 'required|string|max:255',
-            'wifi_ssid' => 'nullable|string|max:255',
-            'wifi_password' => 'nullable|string|max:255',
         ]);
 
         Camera::query()->create($request->all());
@@ -71,7 +72,8 @@ class CameraController extends Controller
     public function edit(string $id)
     {
         $camera = Camera::query()->findOrFail($id);
-        return view('cameras.edit', compact('camera'));
+        $stores = Store::all();
+        return view('cameras.edit', compact('camera', 'stores'));
     }
 
     /**
@@ -82,13 +84,12 @@ class CameraController extends Controller
         $camera = Camera::query()->findOrFail($id);
 
         $request->validate([
+            'store_id' => 'required|exists:stores,id',
             'name' => 'required|string|max:255',
             'ip_address' => 'required|ip',
             'port' => 'required|integer|min:1|max:65535',
             'username' => 'required|string|max:255',
             'password' => 'required|string|max:255',
-            'wifi_ssid' => 'nullable|string|max:255',
-            'wifi_password' => 'nullable|string|max:255',
         ]);
 
         $camera->update($request->all());

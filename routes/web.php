@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CameraController;
+use App\Http\Controllers\StoreController;
 
 Route::redirect('/', '/dashboard');
 
@@ -22,4 +23,5 @@ Route::middleware('auth')->group(function () {
     Route::post('/password/change', [AuthController::class, 'changePassword']);
 
     Route::resource('cameras', CameraController::class);
+    Route::resource('stores', StoreController::class);
 });
