@@ -1,16 +1,28 @@
 @extends('layouts.layout')
 
 @section('content')
-<div class="container">
-    <h1 class="mb-4">Store Details</h1>
+<div class="bg-white shadow-lg rounded-lg p-8 max-w-md mx-auto">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">Store Details</h1>
 
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">{{ $store->name }}</h5>
+    <div class="space-y-4">
+        <div>
+            <h2 class="text-xl font-semibold text-gray-900">{{ $store->name }}</h2>
         </div>
     </div>
 
-    <a href="{{ route('stores.edit', $store) }}" class="btn btn-warning mt-3">Edit</a>
-    <a href="{{ route('stores.index') }}" class="btn btn-secondary mt-3">Back to List</a>
+    <div class="mt-6 flex space-x-4">
+        <a href="{{ route('stores.edit', $store) }}" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+            Edit
+        </a>
+        <a href="{{ route('stores.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Back to List
+        </a>
+    </div>
 </div>
 @endsection
