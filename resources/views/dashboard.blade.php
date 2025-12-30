@@ -54,12 +54,18 @@
 
     cameras.forEach(camera => {
         const video = document.getElementById('video-' + camera.id);
-        // const videoSrc = local + `://${username}:${password}@${host}:8888/cam${camera.id}/index.m3u8`;
         const videoSrc = local + `://${host}:8888/cam${camera.id}/index.m3u8`;
 
         if (Hls.isSupported()) {
-            const hls = new Hls();
-            hls.loadSource(videoSrc);
+            const hls = new Hls({
+                xhrSetup: function (xhr, url) {
+                    const credentials = btoa(`${username}:${password}`);
+                    xhr.setRequestHeader("Authorization", `Basic ${credentials}`);
+                },
+            });
+            hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+                hls.loadSource(videoSrc);
+            });
             hls.attachMedia(video);
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
             video.src = videoSrc;

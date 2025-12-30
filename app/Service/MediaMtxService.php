@@ -47,8 +47,8 @@ class MediaMtxService {
             'authMethod' => 'internal',
             'authInternalUsers' => [
                 [
-                    'user' => 'any',
-                    'pass' => '',
+                    'user' => config('services.mediamtx.admin_user'),
+                    'pass' => config('services.mediamtx.admin_password'),
                     'permissions' => [
                         ['action' => 'publish'],
                         ['action' => 'read'],
