@@ -3,11 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Models\Camera;
+use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\Response;
+use App\Service\MediaMtxService;
 
 class CameraController extends Controller
 {
+    private MediaMtxService $mediamtxService;
+
+    public function __construct(MediaMtxService $mediamtxService)
+    {
+        $this->mediamtxService = $mediamtxService;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -51,7 +62,6 @@ class CameraController extends Controller
     public function show(string $id)
     {
         $camera = Camera::query()->findOrFail($id);
-        // dd($camera);
         return view('cameras.show', compact('camera'));
     }
 

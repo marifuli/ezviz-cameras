@@ -17,7 +17,7 @@ return [
     'mediamtx' => [
         'admin_user' => env('MEDIA_MTX_USERNAME', 'admin'),
         'admin_password' => env('MEDIA_MTX_PASSWORD', 'strongpassword'),
-        'url' => env('MEDIA_MTX_URL', 'http://localhost:9997'),
+        'ip' => env('MEDIA_MTX_IP', '192.168.0.100'),
     ],
 
 ];
