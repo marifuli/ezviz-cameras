@@ -1,4 +1,7 @@
 
+# Cams
+Godown 138.252.14.100 8001-8004
+
 
 docker run -d \
   --name mediamtx \

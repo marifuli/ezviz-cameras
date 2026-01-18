@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('ip_address');
             $table->integer('port')->default(554);
-            $table->string('username');
-            $table->string('password');
+            $table->string('username')->nullable();
+            $table->string('password')->nullable();
             $table->string('wifi_ssid')->nullable();
             $table->string('wifi_password')->nullable();
             $table->timestamps();

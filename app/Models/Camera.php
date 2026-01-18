@@ -14,6 +14,7 @@ class Camera extends Model
         'port',
         'username',
         'password',
+        'server_port'
     ];
 
     static function boot()

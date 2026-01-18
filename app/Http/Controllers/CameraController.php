@@ -35,6 +35,7 @@ class CameraController extends Controller
      */
     public function create()
     {
+        if(Store::count() === 0) Store::create(['name' => "Main"]);
         $stores = Store::all();
         return view('cameras.create', compact('stores'));
     }
@@ -49,10 +50,10 @@ class CameraController extends Controller
             'name' => 'required|string|max:255',
             'ip_address' => 'required|ip',
             'port' => 'required|integer|min:1|max:65535',
-            'username' => 'required|string|max:255',
-            'password' => 'required|string|max:255',
+            'username' => 'nullable|string|max:255',
+            'password' => 'nullable|string|max:255',
+            'server_port' => 'nullable|string|max:255',
         ]);
-
         Camera::query()->create($request->all());
 
         return redirect()->route('cameras.index')->with('success', 'Camera added successfully.');
@@ -89,8 +90,9 @@ class CameraController extends Controller
             'name' => 'required|string|max:255',
             'ip_address' => 'required|ip',
             'port' => 'required|integer|min:1|max:65535',
-            'username' => 'required|string|max:255',
-            'password' => 'required|string|max:255',
+            'username' => 'nullable|string|max:255',
+            'password' => 'nullable|string|max:255',
+            'server_port' => 'nullable|string|max:255',
         ]);
 
         $camera->update($request->all());

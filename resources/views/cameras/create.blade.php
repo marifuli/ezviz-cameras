@@ -34,12 +34,18 @@
 
         <div>
             <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-            <input type="text" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" id="username" name="username" required>
+            <input type="text" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" id="username" name="username" >
         </div>
 
         <div>
             <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-            <input type="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" id="password" name="password" required>
+            <input type="text" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" id="password" name="password" >
+        </div>
+        <div>
+            <label for="password" class="block text-sm font-medium text-gray-700">
+                Server port
+            </label>
+            <input type="text" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" id="server_port" name="server_port" >
         </div>
 
         <div class="flex space-x-4">

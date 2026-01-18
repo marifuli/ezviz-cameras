@@ -16,7 +16,11 @@ class MediaMtxService {
             $user = $camera->username;
             $pass = $camera->password;
             $host = $camera->ip_address;
-            $rtsp = "rtsp://$user:$pass@$host:554/h264";
+            $port = $camera->port;
+            if($user && $pass)
+                $rtsp = "rtsp://$user:$pass@$host:$port/h264";
+            else
+                $rtsp = "rtsp://$host:$port/h264";
             $name = "cam" . $camera->id;
 
             // FFmpeg command for recording

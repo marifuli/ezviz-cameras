@@ -29,6 +29,10 @@
                 <span class="font-medium text-gray-700">Password:</span>
                 <span class="text-gray-900">{{ $camera->password }}</span>
             </div>
+            <div class="flex justify-between">
+                <span class="font-medium text-gray-700">Server Port:</span>
+                <span class="text-gray-900">{{ $camera->server_port }}</span>
+            </div>
         </div>
     </div>
 
