@@ -18,7 +18,7 @@
                 <span class="text-gray-900">{{ $camera->ip_address }}</span>
             </div>
             <div class="flex justify-between">
-                <span class="font-medium text-gray-700">RTSP Port:</span>
+                <span class="font-medium text-gray-700">Port:</span>
                 <span class="text-gray-900">{{ $camera->port }}</span>
             </div>
             <div class="flex justify-between">

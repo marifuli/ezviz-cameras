@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Service\MediaMtxService;
 use Illuminate\Database\Eloquent\Model;
 
 class Camera extends Model
@@ -21,13 +20,13 @@ class Camera extends Model
     {
         parent::boot();
         self::created(function ($model) {
-            MediaMtxService::updateMediaMtxConfig();
+
         });
         self::updated(function ($model) {
-            MediaMtxService::updateMediaMtxConfig();
+
         });
         self::deleted(function ($model) {
-            MediaMtxService::updateMediaMtxConfig();
+
         });
     }
 

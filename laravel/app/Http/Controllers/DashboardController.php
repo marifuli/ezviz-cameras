@@ -19,7 +19,7 @@ class DashboardController extends Controller
         }
 
         // Get cameras from selected stores
-        $cameras = Camera::whereIn('store_id', $selectedStoreIds)->get();
+        $cameras = Camera::whereIn('store_id', $selectedStoreIds ?: [-1])->get();
 
         return view('dashboard', compact('stores', 'cameras', 'selectedStoreIds'));
     }
