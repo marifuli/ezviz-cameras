@@ -309,4 +309,64 @@ public class ApiController : ControllerBase
             return StatusCode(500, new { error = $"Failed to cancel download job {id}" });
         }
     }
+    
+    // Footage endpoints
+    [HttpGet("footage")]
+    public async Task<ActionResult<List<FootageFileViewModel>>> GetFootageFiles(
+        [FromQuery] long? cameraId,
+        [FromQuery] DateTime startDate,
+        [FromQuery] DateTime endDate,
+        [FromQuery] string fileType = "both")
+    {
+        try
+        {
+            var files = await _hikvisionService.GetFootageFilesAsync(cameraId, startDate, endDate, fileType);
+            return Ok(files);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting footage files");
+            return StatusCode(500, new { error = "Failed to get footage files" });
+        }
+    }
+    
+    [HttpGet("footage/download")]
+    public async Task<ActionResult> DownloadFootage([FromQuery] string path)
+    {
+        try
+        {
+            var filePath = await _hikvisionService.GetFootageDownloadUrlAsync(path);
+            
+            // Get file info
+            var fileInfo = new System.IO.FileInfo(filePath);
+            if (!fileInfo.Exists)
+            {
+                return NotFound(new { error = "File not found" });
+            }
+            
+            // Determine content type
+            string contentType = "application/octet-stream";
+            if (filePath.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase))
+            {
+                contentType = "video/mp4";
+            }
+            else if (filePath.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
+                     filePath.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase))
+            {
+                contentType = "image/jpeg";
+            }
+            
+            // Return the file
+            return PhysicalFile(filePath, contentType, fileInfo.Name);
+        }
+        catch (FileNotFoundException)
+        {
+            return NotFound(new { error = "File not found" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error downloading file: {Path}", path);
+            return StatusCode(500, new { error = "Failed to download file" });
+        }
+    }
 }

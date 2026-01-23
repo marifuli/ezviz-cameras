@@ -256,9 +256,43 @@
             </div>
         </div>
     </div>
+    
+    <!-- Charts Row -->
+    <div class="row">
+        <!-- Downloads Per Day Chart -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Downloads Per Day (Last 7 Days)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height:300px;">
+                        <canvas id="downloadsPerDayChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Downloads Per Camera Chart -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Downloads Per Camera</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height:300px;">
+                        <canvas id="downloadsPerCameraChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    
     <script>
         $(document).ready(function() {
             // Check camera connection
@@ -408,7 +442,95 @@
             
             // Refresh active downloads every 5 seconds
             setInterval(loadActiveDownloads, 5000);
+            
+            // Initialize charts
+            initializeCharts();
         });
+        
+        function initializeCharts() {
+            // Downloads Per Day Chart
+            const downloadsPerDayCtx = document.getElementById('downloadsPerDayChart').getContext('2d');
+            
+            // Parse data from model
+            const downloadsPerDayData = @Html.Raw(Json.Serialize(Model.DownloadsPerDay));
+            
+            // Sort data by date
+            downloadsPerDayData.sort((a, b) => new Date(a.label) - new Date(b.label));
+            
+            // Format dates for display
+            const labels = downloadsPerDayData.map(item => {
+                const date = new Date(item.label);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+            
+            const values = downloadsPerDayData.map(item => item.value);
+            
+            new Chart(downloadsPerDayCtx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Downloads',
+                        data: values,
+                        backgroundColor: 'rgba(78, 115, 223, 0.8)',
+                        borderColor: 'rgba(78, 115, 223, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Downloads Per Camera Chart
+            const downloadsPerCameraCtx = document.getElementById('downloadsPerCameraChart').getContext('2d');
+            
+            // Parse data from model
+            const downloadsPerCameraData = @Html.Raw(Json.Serialize(Model.DownloadsPerCamera));
+            
+            // Convert dictionary to arrays
+            const cameraLabels = Object.keys(downloadsPerCameraData);
+            const cameraValues = Object.values(downloadsPerCameraData);
+            
+            // Generate colors
+            const backgroundColors = cameraLabels.map((_, i) => {
+                const hue = (i * 137) % 360; // Use golden angle approximation for color distribution
+                return `hsla(${hue}, 70%, 60%, 0.8)`;
+            });
+            
+            new Chart(downloadsPerCameraCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: cameraLabels,
+                    datasets: [{
+                        data: cameraValues,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12
+                            }
+                        }
+                    }
+                }
+            });
+        }
     </script>
 }
 

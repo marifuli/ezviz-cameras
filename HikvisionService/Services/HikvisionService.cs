@@ -365,6 +365,15 @@ public class HikvisionService : IHikvisionService
             .OrderByDescending(j => j.UpdatedAt)
             .ToListAsync();
     }
+    
+    public async Task<List<FileDownloadJob>> GetCompletedDownloadJobsAsync()
+    {
+        return await _context.FileDownloadJobs
+            .Include(j => j.Camera)
+            .Where(j => j.Status == "completed")
+            .OrderByDescending(j => j.EndTime)
+            .ToListAsync();
+    }
 
     public async Task<FileDownloadJob?> GetDownloadJobByIdAsync(long id)
     {
@@ -405,6 +414,8 @@ public class HikvisionService : IHikvisionService
             .CountAsync(j => j.Status == "downloading");
         dashboard.FailedDownloadJobs = await _context.FileDownloadJobs
             .CountAsync(j => j.Status == "failed");
+        dashboard.CompletedDownloadJobs = await _context.FileDownloadJobs
+            .CountAsync(j => j.Status == "completed");
         
         // Get offline cameras list
         var offlineCameras = await _context.Cameras
@@ -447,6 +458,55 @@ public class HikvisionService : IHikvisionService
             dashboard.StorageDrives.Add(driveViewModel);
         }
         
+        // Generate chart data for downloads per day (last 7 days)
+        var lastWeek = DateTime.UtcNow.AddDays(-7);
+        var completedJobs = await _context.FileDownloadJobs
+            .Where(j => j.Status == "completed" && j.EndTime >= lastWeek)
+            .ToListAsync();
+            
+        var downloadsPerDay = completedJobs
+            .GroupBy(j => j.EndTime?.Date)
+            .Select(g => new ChartDataPoint {
+                Label = g.Key?.ToString("yyyy-MM-dd") ?? "Unknown",
+                Value = g.Count()
+            })
+            .OrderBy(p => p.Label)
+            .ToList();
+            
+        // Add missing days with zero downloads
+        for (int i = 0; i < 7; i++)
+        {
+            var date = DateTime.UtcNow.AddDays(-i).Date.ToString("yyyy-MM-dd");
+            if (!downloadsPerDay.Any(p => p.Label == date))
+            {
+                downloadsPerDay.Add(new ChartDataPoint { Label = date, Value = 0 });
+            }
+        }
+        
+        dashboard.DownloadsPerDay = downloadsPerDay.OrderBy(p => p.Label).ToList();
+        
+        // Generate storage usage trend data (if available)
+        // This would require historical storage data which might not be available
+        // For now, we'll just use current values
+        foreach (var drive in dashboard.StorageDrives)
+        {
+            dashboard.StorageUsageTrend.Add(new ChartDataPoint {
+                Label = drive.Name,
+                Value = drive.UsagePercentage,
+                Category = "Current"
+            });
+        }
+        
+        // Generate downloads per camera statistics
+        var downloadsPerCamera = await _context.FileDownloadJobs
+            .Where(j => j.Status == "completed")
+            .Include(j => j.Camera)
+            .GroupBy(j => j.Camera.Name)
+            .Select(g => new { CameraName = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.CameraName, x => x.Count);
+            
+        dashboard.DownloadsPerCamera = downloadsPerCamera;
+        
         return dashboard;
     }
     
@@ -462,5 +522,72 @@ public class HikvisionService : IHikvisionService
         }
         
         return "Idle";
+    }
+    
+    // Footage methods
+    public async Task<List<FootageFileViewModel>> GetFootageFilesAsync(long? cameraId, DateTime startDate, DateTime endDate, string fileType = "both")
+    {
+        var result = new List<FootageFileViewModel>();
+        
+        try
+        {
+            // Get completed download jobs that match the criteria
+            var query = _context.FileDownloadJobs
+                .Include(j => j.Camera)
+                .Where(j => j.Status == "completed" &&
+                           j.FileStartTime >= startDate &&
+                           j.FileEndTime <= endDate);
+                           
+            if (cameraId.HasValue)
+            {
+                query = query.Where(j => j.CameraId == cameraId.Value);
+            }
+            
+            if (fileType != "both")
+            {
+                query = query.Where(j => j.FileType == fileType);
+            }
+            
+            var jobs = await query.OrderByDescending(j => j.FileStartTime).ToListAsync();
+            
+            foreach (var job in jobs)
+            {
+                var footageFile = new FootageFileViewModel
+                {
+                    FileName = job.FileName,
+                    FilePath = job.DownloadPath,
+                    FileType = job.FileType,
+                    FileSize = job.FileSize,
+                    FileStartTime = job.FileStartTime,
+                    FileEndTime = job.FileEndTime,
+                    CameraName = job.Camera.Name,
+                    CameraId = job.CameraId,
+                    // Generate a thumbnail path (this would need to be implemented)
+                    ThumbnailPath = job.FileType == "video" ? "/thumbnails/video-placeholder.jpg" : job.DownloadPath,
+                    // Generate a download URL
+                    DownloadUrl = $"/api/footage/download?path={Uri.EscapeDataString(job.DownloadPath)}"
+                };
+                
+                result.Add(footageFile);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting footage files");
+        }
+        
+        return result;
+    }
+    
+    public Task<string> GetFootageDownloadUrlAsync(string filePath)
+    {
+        // Check if the file exists
+        if (!System.IO.File.Exists(filePath))
+        {
+            throw new FileNotFoundException("Footage file not found", filePath);
+        }
+        
+        // Return the file path - the actual download will be handled by the controller
+        return Task.FromResult(filePath);
     }
 }

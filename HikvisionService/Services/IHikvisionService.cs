@@ -27,10 +27,15 @@ public interface IHikvisionService
     Task<List<FileDownloadJob>> GetAllDownloadJobsAsync();
     Task<List<FileDownloadJob>> GetActiveDownloadJobsAsync();
     Task<List<FileDownloadJob>> GetFailedDownloadJobsAsync();
+    Task<List<FileDownloadJob>> GetCompletedDownloadJobsAsync();
     Task<FileDownloadJob?> GetDownloadJobByIdAsync(long id);
     Task<bool> RetryDownloadJobAsync(long id);
     Task<bool> CancelDownloadJobAsync(long id);
     
     // Dashboard methods
     Task<DashboardViewModel> GetDashboardDataAsync();
+    
+    // Footage methods
+    Task<List<FootageFileViewModel>> GetFootageFilesAsync(long? cameraId, DateTime startDate, DateTime endDate, string fileType = "both");
+    Task<string> GetFootageDownloadUrlAsync(string filePath);
 }
