@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -219,22 +220,44 @@ public class AuthController : Controller
     // ViewModels
     public class LoginViewModel
     {
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email format")]
         public string Email { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "Password is required")]
         public string Password { get; set; } = string.Empty;
     }
 
     public class RegisterViewModel
     {
+        [Required(ErrorMessage = "Name is required")]
+        [StringLength(100, ErrorMessage = "Name cannot be longer than 100 characters")]
         public string Name { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email format")]
         public string Email { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "Password is required")]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters")]
         public string Password { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "Password confirmation is required")]
+        [Compare("Password", ErrorMessage = "The password and confirmation password do not match")]
         public string PasswordConfirmation { get; set; } = string.Empty;
     }
 
     public class ChangePasswordViewModel
     {
+        [Required(ErrorMessage = "Current password is required")]
         public string CurrentPassword { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "New password is required")]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters")]
         public string Password { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "Password confirmation is required")]
+        [Compare("Password", ErrorMessage = "The new password and confirmation password do not match")]
         public string PasswordConfirmation { get; set; } = string.Empty;
     }
 }

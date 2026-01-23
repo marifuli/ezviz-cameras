@@ -23,12 +23,6 @@ public class HomeController : Controller
         try
         {
             var allStores = await _context.Stores.OrderBy(s => s.Name).ToListAsync();
-            
-            // If no stores selected, redirect to first-time setup page if no stores exist
-            if (!allStores.Any())
-            {
-                return View("FirstTimeSetup");
-            }
 
             var selectedStoreIds = stores?.ToList() ?? allStores.Select(s => s.Id).ToList();
             
