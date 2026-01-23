@@ -584,7 +584,7 @@ public class HikvisionService : IHikvisionService
         // Check if the file exists
         if (!System.IO.File.Exists(filePath))
         {
-            throw new FileNotFoundException("Footage file not found", filePath);
+            throw new FileNotFoundException("Footage file not found: " + filePath);
         }
         
         // Return the file path - the actual download will be handled by the controller

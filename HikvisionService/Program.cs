@@ -3,6 +3,9 @@ using Serilog;
 using HikvisionService.Data;
 using HikvisionService.Services;
 
+var dhakaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Dhaka");
+var dhakaTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, dhakaTimeZone);
+
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()

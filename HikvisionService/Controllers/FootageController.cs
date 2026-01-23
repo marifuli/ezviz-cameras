@@ -11,11 +11,13 @@ public class FootageController : Controller
 {
     private readonly IHikvisionService _hikvisionService;
     private readonly ILogger<FootageController> _logger;
+    private readonly IWebHostEnvironment _env;
 
-    public FootageController(IHikvisionService hikvisionService, ILogger<FootageController> logger)
+    public FootageController(IHikvisionService hikvisionService, ILogger<FootageController> logger, IWebHostEnvironment env)
     {
         _hikvisionService = hikvisionService;
         _logger = logger;
+        _env = env;
     }
 
     public async Task<IActionResult> Index(FootageViewModel model)
@@ -60,12 +62,16 @@ public class FootageController : Controller
         {
             // Validate and get the file path
             var filePath = await _hikvisionService.GetFootageDownloadUrlAsync(path);
-            
+            var absolutePath = Path.Combine(
+                _env.ContentRootPath,
+                filePath.Replace("/", Path.DirectorySeparatorChar.ToString())
+            );
+
             // Get file info
-            var fileInfo = new System.IO.FileInfo(filePath);
+            var fileInfo = new System.IO.FileInfo(absolutePath);
             if (!fileInfo.Exists)
             {
-                return NotFound();
+                return NotFound(absolutePath);
             }
             
             // Determine content type
@@ -81,7 +87,7 @@ public class FootageController : Controller
             }
             
             // Return the file
-            return PhysicalFile(filePath, contentType, fileInfo.Name);
+            return PhysicalFile(absolutePath, contentType, path);
         }
         catch (Exception ex)
         {
