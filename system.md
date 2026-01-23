@@ -1,121 +1,308 @@
+# 📦 Camera Recording Sync System
+
+*(Laravel + .NET Microservice)*
+
+## 🎯 Scope (Current Phase)
+
+**Included**
+
+* Periodic camera recording discovery
+* Automated recording download
+* Progress & status sync to Laravel SQLite
+* File browsing & download from Laravel
+* 7-day archive & admin notification
+
+**Explicitly Excluded (for now)**
+
+* Live view
+* Playback streaming
+* Real-time camera control
 
 ---
 
-## 3. Core Components
+## 🧱 Architecture Overview (Final)
 
-### 3.1 Laravel Web Application
+```text
+Laravel (Control + UI)
+│
+│ HTTP (Internal API)
+▼
+.NET Camera Worker (SDK Access)
+│
+│ Native SDK (.so / .dll)
+▼
+EZVIZ / Hikvision Cameras
+```
 
-**Responsibilities**
-- User authentication & authorization
-- Camera list and metadata
-- Time-range selection for footage
-- File listing and downloads
-- UI for live streaming
-- Scheduling background download requests
-
-**Does NOT**
-- Communicate with cameras directly
-- Load native SDK libraries
-- Handle long-running device connections
-
-**Technology**
-- Laravel (PHP)
-- SqLite
-- Redis (queues / cache)
-- Nginx
+* **Laravel owns SQLite**
+* **.NET never touches DB directly**
+* **.NET only reports status via HTTP**
+* **Laravel is the single source of truth**
 
 ---
 
-### 3.2 Camera SDK Microservice
+# 1️⃣ Task: Database & Data Model Preparation (Laravel)
 
-**Purpose**
-A long-running internal service that interacts directly with the Hikvision SDK.
+### Goal
 
-**Technology**
-- C# (.NET 6 LTS)
-- ASP.NET Core (Minimal API)
-- Hikvision / EZVIZ SDK (.so)
-- FFmpeg
-
-**Responsibilities**
-- Maintain persistent camera sessions
-- Download recordings by time range
-- Handle live stream sessions
-- Pipe raw video to FFmpeg
-- Generate HLS streams (.m3u8)
-- Report job status to Laravel
-
-**Key Characteristics**
-- Runs as a daemon / systemd service
-- Stateless API, stateful internal workers
-- No public internet exposure
+Prepare SQLite tables to track recordings, progress, and archive state.
 
 ---
 
-## 4. Communication Flow
+### Micro Tasks
 
-### 4.1 Footage Download
+#### 1.1 Camera Table (already exists)
 
-1. User selects camera + time range
-2. Laravel sends request to SDK service
-3. SDK service downloads footage
-4. File saved to storage
-5. Metadata stored in database
-6. User downloads file via Laravel
+Ensure it has:
 
----
-
-### 4.2 Live Streaming
-
-1. User requests live view
-2. Laravel requests SDK service to start stream
-3. SDK pulls live feed via SDK
-4. FFmpeg converts to HLS
-5. Browser plays `.m3u8` stream
+* [ ] `id`
+* [ ] `ip`
+* [ ] `port`
+* [ ] `username`
+* [ ] `password`
+* [ ] `last_checked_at`
+* [ ] `status` (online/offline/error)
 
 ---
 
-## 5. Why This Architecture
+#### 1.2 Camera Recordings Table
 
-### Separation of Concerns
-- Web app stays fast and stable
-- Native SDK runs in controlled environment
+Create a new table: `camera_recordings`
 
-### Scalability
-- SDK service can be scaled independently
-- Multiple camera workers possible
+**Fields**
 
-### Stability
-- SDK crashes do not affect web users
-- Automatic restart via systemd
-
----
-
-## 6. Deployment Model
-
-### Production Server
-- Ubuntu x86_64
-- Laravel + SDK service on same private network
-- SDK service bound to localhost or internal IP
-
-### Development
-- Same Linux environment as production
-- No SDK execution on macOS
+* [ ] `id`
+* [ ] `camera_id`
+* [ ] `remote_file_id` (SDK file identifier)
+* [ ] `start_time`
+* [ ] `end_time`
+* [ ] `file_size`
+* [ ] `download_status` (`pending/downloading/completed/failed`)
+* [ ] `download_progress` (0–100)
+* [ ] `local_path`
+* [ ] `error_message`
+* [ ] `created_at`
 
 ---
 
-## 7. Security Notes
+#### 1.3 Archive Table
 
-- SDK service not publicly exposed
-- Internal authentication (API keys / IP allowlist)
-- No camera credentials stored in frontend
+Create table: `video_archives`
+
+**Fields**
+
+* [ ] `id`
+* [ ] `from_date`
+* [ ] `to_date`
+* [ ] `file_path`
+* [ ] `size`
+* [ ] `status` (`ready/downloaded/cleared`)
+* [ ] `created_at`
 
 ---
 
-## 8. Future Extensions
+# 2️⃣ Task: .NET Camera Worker Service (Core)
 
-- Horizontal scaling of SDK service
-- Queue-based download orchestration
-- S3-compatible storage
-- Stream concurrency limits
+### Goal
 
+A headless worker that **loops cameras**, finds recordings, and downloads them.
+
+---
+
+## 2.1 Service Skeleton
+
+### Micro Tasks
+
+* [ ] Create ASP.NET Core **Minimal API**
+* [ ] Add `/health` endpoint
+* [ ] Add `/sync/start` endpoint
+* [ ] Add API key authentication
+* [ ] Add graceful shutdown handling
+
+---
+
+## 2.2 Camera Fetch Loop
+
+### Responsibility
+
+Laravel tells .NET **which cameras exist**.
+
+### Micro Tasks
+
+* [ ] Create endpoint `/cameras`
+* [ ] Laravel exposes `/internal/cameras/list`
+* [ ] .NET fetches all cameras periodically
+* [ ] Skip cameras recently checked
+
+---
+
+## 2.3 Recording Discovery (SDK)
+
+### Responsibility
+
+Ask camera **what recordings exist**.
+
+### Micro Tasks
+
+* [ ] Login to camera via SDK
+* [ ] Query recordings by date range
+* [ ] Normalize SDK response
+* [ ] Ignore already-known recordings
+* [ ] Return recording metadata to Laravel
+
+---
+
+## 2.4 Recording Download
+
+### Responsibility
+
+Download files **one by one**, resumable.
+
+### Micro Tasks
+
+* [ ] Request download from SDK
+* [ ] Save to structured folder:
+
+  ```
+  storage/cameras/{camera_id}/YYYY/MM/DD/
+  ```
+* [ ] Track byte progress
+* [ ] Handle network interruption
+* [ ] Mark failed downloads
+
+---
+
+## 2.5 Status Reporting to Laravel
+
+### Micro Tasks
+
+* [ ] POST `/internal/recordings/update`
+* [ ] Send:
+
+  * status
+  * progress
+  * error (if any)
+* [ ] Laravel updates SQLite
+
+---
+
+# 3️⃣ Task: Laravel ↔ .NET Communication Layer
+
+### Goal
+
+Reliable, secure internal communication.
+
+---
+
+### Micro Tasks
+
+#### 3.1 Authentication
+
+* [ ] Shared API key (`X-INTERNAL-KEY`)
+* [ ] Reject non-authorized requests
+
+---
+
+#### 3.2 Laravel Internal APIs
+
+Create routes under `/internal/*`:
+
+* [ ] `/internal/cameras/list`
+* [ ] `/internal/recordings/store`
+* [ ] `/internal/recordings/update`
+
+---
+
+#### 3.3 Error Handling
+
+* [ ] Retry failed requests
+* [ ] Log failures
+* [ ] Alert admin on repeated failures
+
+---
+
+# 4️⃣ Task: Laravel Frontend – File Browsing & Download
+
+### Goal
+
+Let admin **browse and download recordings** easily.
+
+---
+
+## 4.1 Recording Browser UI
+
+### Micro Tasks
+
+* [ ] Camera → Recordings list
+* [ ] Filter by date
+* [ ] Show download status
+* [ ] Show file size
+
+---
+
+## 4.2 File Download Endpoint
+
+### Micro Tasks
+
+* [ ] Secure download route
+* [ ] Stream file (no memory load)
+* [ ] Permission checks
+* [ ] Download logs
+
+---
+
+# 5️⃣ Task: Weekly Archive & Cleanup (Laravel Job)
+
+### Goal
+
+Control disk usage and notify admin.
+
+---
+
+## 5.1 Archive Job (Laravel Scheduler)
+
+### Micro Tasks
+
+* [ ] Select recordings older than 7 days
+* [ ] Zip by date range
+* [ ] Save archive
+* [ ] Record in `video_archives`
+
+---
+
+## 5.2 Admin Notification
+
+### Micro Tasks
+
+* [ ] Email admin
+* [ ] Include:
+
+  * Date range
+  * Archive size
+  * Download link
+
+---
+
+## 5.3 Cleanup Flow
+
+### Micro Tasks
+
+* [ ] Admin downloads archive
+* [ ] Admin clicks “Clear Archive”
+* [ ] Laravel deletes old recordings
+* [ ] Marks archive as `cleared`
+
+---
+
+# 6️⃣ Execution Order (Very Important)
+
+Implement **strictly in this order**:
+
+1. Laravel DB + models
+2. .NET service skeleton
+3. Camera list fetch
+4. Recording discovery
+5. Recording download
+6. Status sync
+7. Laravel UI
+8. Archive job

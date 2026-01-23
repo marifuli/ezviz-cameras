@@ -22,7 +22,7 @@ namespace Hik.Api
         private IPlaybackService playbackService;
         private IConfigService configService;
 
-        internal const string HCNetSDK = @"HikvisionSDK\HCNetSDK.dll";
+        internal const string HCNetSDK = "libhcnetsdk.so";
         /// <summary>
         /// When connection is lost
         /// </summary>
