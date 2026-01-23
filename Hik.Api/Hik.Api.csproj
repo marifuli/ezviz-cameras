@@ -33,11 +33,11 @@
 
   <!-- Copy Linux native libraries to output directory -->
   <ItemGroup>
-    <Content Include="./lib/*.so">
+    <Content Include="HikvisionSDK/*.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(Filename)%(Extension)</Link>
     </Content>
-    <Content Include="./lib/HCNetSDKCom/*.so">
+    <Content Include="HikvisionSDK/HCNetSDKCom/*.so*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>HCNetSDKCom/%(Filename)%(Extension)</Link>
     </Content>
