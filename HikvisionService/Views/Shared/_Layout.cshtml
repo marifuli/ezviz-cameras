@@ -16,6 +16,12 @@
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com" integrity="sha512-vKMx8UnXGHaLBagMQXlcZg9VqA9yUFlJLttq0mS7GC2OfVz4MPfV+gJWQ9nQqvZZbh3xoxkC9n0CSQzJ2i0wQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdnjs.cloudflare.com" integrity="sha512-VEd+nq25CkR676O+pLBnPkZ+BBzkXT57DOepBHZ0QueSe3chF/rdN6aL2spfglzVrA9fiL3Ua/H/AWd243/2g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="bg-gray-50 text-gray-900">
     <nav class="bg-white text-gray-900 shadow-lg border-b border-gray-200">
@@ -91,7 +97,7 @@
                             </svg>
                             Stores
                         </a>
-                        <a href="@Url.Action("Index", "Logs")" class="hover:text-gray-700 transition duration-150 flex items-center">
+                        <a href="@Url.Action("Index", "LogsView")" class="hover:text-gray-700 transition duration-150 flex items-center">
                             <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>

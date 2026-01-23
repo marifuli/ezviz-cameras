@@ -6,14 +6,14 @@ using System.Text.RegularExpressions;
 namespace HikvisionService.Controllers;
 
 [Authorize]
-public class LogsController : Controller
+public class LogsViewController : Controller
 {
-    private readonly ILogger<LogsController> _logger;
+    private readonly ILogger<LogsViewController> _logger;
     private readonly IWebHostEnvironment _environment;
     private readonly IConfiguration _configuration;
 
-    public LogsController(
-        ILogger<LogsController> logger,
+    public LogsViewController(
+        ILogger<LogsViewController> logger,
         IWebHostEnvironment environment,
         IConfiguration configuration)
     {

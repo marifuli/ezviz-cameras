@@ -205,7 +205,7 @@ public class CameraHealthCheckService : BackgroundService
                             FileName = file.Name,
                             FileType = "video",
                             FileSize = file.Size,
-                            DownloadPath = $"downloads/{camera.Id}/{file.Name}",
+                            DownloadPath = $"downloads/{camera.Id}/{file.Name}.mp4",
                             Status = "pending",
                             Progress = 0,
                             FileStartTime = file.Date,

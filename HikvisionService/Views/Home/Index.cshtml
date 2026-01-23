@@ -3,290 +3,202 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<div class="container-fluid">
-    <h1 class="mt-4">Camera Monitoring Dashboard</h1>
-    
-    <!-- System Summary Cards -->
-    <div class="row mt-4">
-        <div class="col-xl-2 col-md-4 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Total Cameras</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalCameras</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-camera fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+<div class="p-6 space-y-2 bg-gray-50 min-h-screen">
+
+    <!-- PAGE TITLE -->
+    <h1 class="text-2xl font-semibold text-gray-800">
+        Dashboard
+    </h1>
+
+    <!-- ===================== -->
+    <!-- SUMMARY STAT CARDS -->
+    <!-- ===================== -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+
+        <!-- Total Cameras -->
+        <div class="bg-white rounded-xl shadow-sm p-4 flex justify-between items-center">
+            <div>
+                <p class="text-xs uppercase tracking-wide text-gray-500">Total Cameras</p>
+                <p class="text-2xl font-bold text-gray-800">@Model.TotalCameras</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                <i class="fas fa-camera"></i>
             </div>
         </div>
 
-        <div class="col-xl-2 col-md-4 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Online Cameras</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.OnlineCameras</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+        <!-- Online -->
+        <div class="bg-white rounded-xl shadow-sm p-4 flex justify-between items-center">
+            <div>
+                <p class="text-xs uppercase tracking-wide text-gray-500">Online</p>
+                <p class="text-2xl font-bold text-gray-800">@Model.OnlineCameras</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-green-100 text-green-600 flex items-center justify-center">
+                <i class="fas fa-check-circle"></i>
             </div>
         </div>
 
-        <div class="col-xl-2 col-md-4 mb-4">
-            <div class="card border-left-danger shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                Offline Cameras</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.OfflineCameras</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-times-circle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+        <!-- Offline -->
+        <div class="bg-white rounded-xl shadow-sm p-4 flex justify-between items-center">
+            <div>
+                <p class="text-xs uppercase tracking-wide text-gray-500">Offline</p>
+                <p class="text-2xl font-bold text-gray-800">@Model.OfflineCameras</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-red-100 text-red-600 flex items-center justify-center">
+                <i class="fas fa-times-circle"></i>
             </div>
         </div>
 
-        <div class="col-xl-2 col-md-4 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Active Downloads</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.ActiveDownloadJobs</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-download fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+        <!-- Active Downloads -->
+        <div class="bg-white rounded-xl shadow-sm p-4 flex justify-between items-center">
+            <div>
+                <p class="text-xs uppercase tracking-wide text-gray-500">Active Downloads</p>
+                <p class="text-2xl font-bold text-gray-800">@Model.ActiveDownloadJobs</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-cyan-100 text-cyan-600 flex items-center justify-center">
+                <i class="fas fa-download"></i>
             </div>
         </div>
 
-        <div class="col-xl-2 col-md-4 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Failed Downloads</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.FailedDownloadJobs</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+        <!-- Failed Downloads -->
+        <div class="bg-white rounded-xl shadow-sm p-4 flex justify-between items-center">
+            <div>
+                <p class="text-xs uppercase tracking-wide text-gray-500">Failed</p>
+                <p class="text-2xl font-bold text-gray-800">@Model.FailedDownloadJobs</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-yellow-100 text-yellow-600 flex items-center justify-center">
+                <i class="fas fa-exclamation-triangle"></i>
             </div>
         </div>
-        
-        <div class="col-xl-2 col-md-4 mb-4">
-            <div class="card border-left-secondary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
-                                Actions</div>
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-sm btn-primary" id="checkAllCameras">
-                                    <i class="fas fa-sync"></i> Check All
-                                </button>
-                            </div>
+
+        <!-- Actions -->
+        <div class="bg-white rounded-xl shadow-sm p-4">
+            <p class="text-xs uppercase tracking-wide text-gray-500 mb-2">Actions</p>
+            <button id="checkAllCameras"
+                    class="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg">
+                <i class="fas fa-sync"></i> Check All
+            </button>
+        </div>
+
+    </div>
+
+    <!-- ===================== -->
+    <!-- OFFLINE + STORAGE -->
+    <!-- ===================== -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+        <!-- OFFLINE CAMERAS -->
+        <div class="bg-white rounded-xl shadow-sm">
+            <div class="px-5 py-4 border-b flex justify-between items-center">
+                <h2 class="font-semibold text-gray-800">Offline Cameras</h2>
+                <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-600">
+                    @Model.OfflineCameras
+                </span>
+            </div>
+
+            <div class="p-4">
+                @if (Model.OfflineCamerasList.Any())
+                {
+                    <table class="w-full text-sm">
+                        <thead class="text-gray-500 border-b">
+                            <tr>
+                                <th class="py-2 text-left">Camera</th>
+                                <th class="py-2 text-left">Last Online</th>
+                                <th class="py-2 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y">
+                            @foreach (var camera in Model.OfflineCamerasList)
+                            {
+                                <tr>
+                                    <td class="py-2">@camera.Name</td>
+                                    <td class="py-2">
+                                        @(camera.LastOnlineAt?.ToString("yyyy-MM-dd HH:mm") ?? "Never")
+                                    </td>
+                                    <td class="py-2 text-right">
+                                        <button data-id="@camera.Id"
+                                                class="check-camera px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded">
+                                            <i class="fas fa-sync"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <p class="text-center text-green-600">All cameras are online 🎉</p>
+                }
+            </div>
+        </div>
+
+        <!-- STORAGE -->
+        <div class="xl:col-span-2 bg-white rounded-xl shadow-sm">
+            <div class="px-5 py-4 border-b flex justify-between items-center">
+                <h2 class="font-semibold text-gray-800">Storage Usage</h2>
+                <button id="checkStorage"
+                        class="px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                    <i class="fas fa-sync"></i> Check
+                </button>
+            </div>
+
+            <div class="p-4 space-y-4">
+                @foreach (var drive in Model.StorageDrives)
+                {
+                    <div class="border rounded-lg p-3">
+                        <div class="flex justify-between text-sm font-medium mb-2">
+                            <span>@drive.Name (@drive.RootPath)</span>
+                            <span>@drive.UsagePercentage.ToString("F1")%</span>
+                        </div>
+
+                        <div class="w-full h-2 bg-gray-200 rounded">
+                            <div class="h-2 rounded bg-blue-600"
+                                 style="width:@drive.UsagePercentage%"></div>
+                        </div>
+
+                        <div class="mt-2 text-xs text-gray-500 flex justify-between">
+                            <span>Used: @FormatBytes(drive.UsedSpace)</span>
+                            <span>Free: @FormatBytes(drive.FreeSpace)</span>
+                            <span>Total: @FormatBytes(drive.TotalSpace)</span>
                         </div>
                     </div>
-                </div>
+                }
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ===================== -->
+    <!-- ACTIVE DOWNLOADS -->
+    <!-- ===================== -->
+    <div class="bg-white rounded-xl shadow-sm">
+        <div class="px-5 py-4 border-b">
+            <h2 class="font-semibold text-gray-800">Active Downloads</h2>
+        </div>
+        <div class="p-4" id="activeDownloads">
+            <p class="text-center text-gray-500">Loading active downloads...</p>
+        </div>
+    </div>
+
+    <!-- ===================== -->
+    <!-- CHARTS -->
+    <!-- ===================== -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl shadow-sm p-4">
+            <h3 class="font-semibold mb-2">Downloads Per Day</h3>
+            <div class="h-72">
+                <canvas id="downloadsPerDayChart"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm p-4">
+            <h3 class="font-semibold mb-2">Downloads Per Camera</h3>
+            <div class="h-72">
+                <canvas id="downloadsPerCameraChart"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- Content Row -->
-    <div class="row">
-        <!-- Offline Cameras List -->
-        <div class="col-xl-4 col-lg-5">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Offline Cameras</h6>
-                </div>
-                <div class="card-body">
-                    @if (Model.OfflineCamerasList.Any())
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-sm" width="100%" cellspacing="0">
-                                <thead>
-                                    <tr>
-                                        <th>Camera</th>
-                                        <th>Last Online</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var camera in Model.OfflineCamerasList)
-                                    {
-                                        <tr>
-                                            <td>@camera.Name</td>
-                                            <td>
-                                                @if (camera.LastOnlineAt.HasValue)
-                                                {
-                                                    <span title="@camera.LastOnlineAt">
-                                                        @camera.LastOnlineAt.Value.ToString("yyyy-MM-dd HH:mm")
-                                                    </span>
-                                                }
-                                                else
-                                                {
-                                                    <span>Never</span>
-                                                }
-                                            </td>
-                                            <td>
-                                                <button class="btn btn-sm btn-primary check-camera" data-id="@camera.Id">
-                                                    <i class="fas fa-sync"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="text-center">
-                            <p class="text-success">All cameras are online!</p>
-                        </div>
-                    }
-                </div>
-            </div>
-        </div>
-
-        <!-- Storage Usage Panel -->
-        <div class="col-xl-8 col-lg-7">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Storage Usage</h6>
-                    <div class="dropdown no-arrow">
-                        <button class="btn btn-sm btn-primary" id="checkStorage">
-                            <i class="fas fa-sync"></i> Check Storage
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    @if (Model.StorageDrives.Any())
-                    {
-                        foreach (var drive in Model.StorageDrives)
-                        {
-                            <div class="mb-4">
-                                <h4 class="small font-weight-bold">
-                                    @drive.Name (@drive.RootPath)
-                                    <span class="float-right">
-                                        @(drive.UsagePercentage.ToString("F1"))%
-                                    </span>
-                                </h4>
-                                <div class="progress mb-2">
-                                    @{
-                                        string progressClass = "bg-success";
-                                        if (drive.UsagePercentage >= 95)
-                                        {
-                                            progressClass = "bg-danger";
-                                        }
-                                        else if (drive.UsagePercentage >= 85)
-                                        {
-                                            progressClass = "bg-warning";
-                                        }
-                                        else if (drive.UsagePercentage >= 70)
-                                        {
-                                            progressClass = "bg-info";
-                                        }
-                                    }
-                                    <div class="progress-bar @progressClass" role="progressbar" style="width: @(drive.UsagePercentage)%"
-                                         aria-valuenow="@(drive.UsagePercentage)" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                                <div class="small">
-                                    <span class="mr-2">
-                                        <i class="fas fa-circle text-primary"></i> Used: @FormatBytes(drive.UsedSpace)
-                                    </span>
-                                    <span class="mr-2">
-                                        <i class="fas fa-circle text-success"></i> Free: @FormatBytes(drive.FreeSpace)
-                                    </span>
-                                    <span class="mr-2">
-                                        <i class="fas fa-circle text-info"></i> Total: @FormatBytes(drive.TotalSpace)
-                                    </span>
-                                    <span class="float-right text-xs">
-                                        Last checked: @drive.LastCheckedAt.ToString("yyyy-MM-dd HH:mm:ss")
-                                    </span>
-                                </div>
-                            </div>
-                        }
-                    }
-                    else
-                    {
-                        <div class="text-center">
-                            <p>No storage drives configured.</p>
-                            <a href="/Store/Create" class="btn btn-primary">Add Storage Drive</a>
-                        </div>
-                    }
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Active Downloads -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Active Downloads</h6>
-                </div>
-                <div class="card-body">
-                    <div id="activeDownloads">
-                        <p class="text-center">Loading active downloads...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Charts Row -->
-    <div class="row">
-        <!-- Downloads Per Day Chart -->
-        <div class="col-xl-6 col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Downloads Per Day (Last 7 Days)</h6>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container" style="position: relative; height:300px;">
-                        <canvas id="downloadsPerDayChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Downloads Per Camera Chart -->
-        <div class="col-xl-6 col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Downloads Per Camera</h6>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container" style="position: relative; height:300px;">
-                        <canvas id="downloadsPerCameraChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 @section Scripts {

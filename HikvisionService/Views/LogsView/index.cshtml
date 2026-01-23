@@ -1,0 +1,151 @@
+@model HikvisionService.Models.ViewModels.LogViewModel
+@using System.IO
+@{
+    ViewData["Title"] = "System Logs";
+}
+
+<div class="container-fluid">
+    <h1 class="mt-4">System Logs</h1>
+    <p class="lead">View the latest application logs</p>
+    
+    <!-- Filter Options -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Log Viewer</h6>
+            <div>
+                <button id="refreshLogs" class="btn btn-sm btn-primary">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+                <div class="btn-group ml-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                        Filter: <span id="currentFilter">@Model.LogLevel</span>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item log-filter @(Model.LogLevel == "All" ? "active" : "")" href="#" data-level="All">All Levels</a>
+                        <a class="dropdown-item log-filter @(Model.LogLevel == "Error" ? "active" : "")" href="#" data-level="Error">Errors Only</a>
+                        <a class="dropdown-item log-filter @(Model.LogLevel == "Warning" ? "active" : "")" href="#" data-level="Warning">Warnings Only</a>
+                        <a class="dropdown-item log-filter @(Model.LogLevel == "Information" ? "active" : "")" href="#" data-level="Information">Information Only</a>
+                        <a class="dropdown-item log-filter @(Model.LogLevel == "Debug" ? "active" : "")" href="#" data-level="Debug">Debug Only</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="mb-2 text-xs">
+                <span>Log file: <strong>@(string.IsNullOrEmpty(Model.LogFilePath) ? "None" : System.IO.Path.GetFileName(Model.LogFilePath))</strong></span>
+                <span class="ml-3">Last updated: <strong id="lastUpdated">@Model.LastUpdated.ToString("yyyy-MM-dd HH:mm:ss")</strong></span>
+                <span class="ml-3">Showing: <strong>@Model.LogLines.Count</strong> lines</span>
+            </div>
+            
+            <div class="log-container bg-dark text-light p-3 rounded" style="height: 600px; overflow-y: auto; font-family: monospace; font-size: 0.85rem;">
+                <pre id="logContent" class="m-0">@string.Join(Environment.NewLine, Model.LogLines)</pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Scroll to bottom of log container
+            const logContainer = document.querySelector('.log-container');
+            logContainer.scrollTop = logContainer.scrollHeight;
+            
+            // Refresh logs
+            $('#refreshLogs').click(function() {
+                refreshLogs();
+            });
+            
+            // Filter logs
+            $('.log-filter').click(function(e) {
+                e.preventDefault();
+                const level = $(this).data('level');
+                $('#currentFilter').text(level);
+                $('.log-filter').removeClass('active');
+                $(this).addClass('active');
+                refreshLogs(level);
+            });
+            
+            // Auto-refresh every 30 seconds
+            setInterval(function() {
+                refreshLogs($('#currentFilter').text());
+            }, 30000);
+            
+            function refreshLogs(level = $('#currentFilter').text()) {
+                $.ajax({
+                    url: '/Logs/Refresh',
+                    type: 'GET',
+                    data: { logLevel: level },
+                    success: function(result) {
+                        if (result.success) {
+                            $('#logContent').text(result.logLines.join('\n'));
+                            $('#lastUpdated').text(result.lastUpdated);
+                            
+                            // Scroll to bottom
+                            logContainer.scrollTop = logContainer.scrollHeight;
+                        } else {
+                            $('#logContent').text('Error loading logs: ' + result.message);
+                        }
+                    },
+                    error: function() {
+                        $('#logContent').text('Error refreshing logs. Please try again.');
+                    }
+                });
+            }
+            
+            // Highlight log levels with colors
+            function highlightLogLevels() {
+                const logContent = document.getElementById('logContent');
+                if (!logContent) return;
+                
+                let html = logContent.innerHTML;
+                
+                // Replace log levels with colored spans
+                html = html.replace(/\[Error\]/g, '<span class="text-danger">[Error]</span>');
+                html = html.replace(/\[Warning\]/g, '<span class="text-warning">[Warning]</span>');
+                html = html.replace(/\[Information\]/g, '<span class="text-info">[Information]</span>');
+                html = html.replace(/\[Debug\]/g, '<span class="text-secondary">[Debug]</span>');
+                
+                logContent.innerHTML = html;
+            }
+            
+            // Initial highlighting
+            highlightLogLevels();
+            
+            // Highlight after each refresh
+            $(document).ajaxComplete(function() {
+                highlightLogLevels();
+            });
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .log-container {
+            background-color: #1e1e1e !important;
+            color: #f8f8f8 !important;
+        }
+        
+        .log-container pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .text-danger {
+            color: #ff6b6b !important;
+        }
+        
+        .text-warning {
+            color: #feca57 !important;
+        }
+        
+        .text-info {
+            color: #54a0ff !important;
+        }
+        
+        .text-secondary {
+            color: #a5b1c2 !important;
+        }
+    </style>
+}

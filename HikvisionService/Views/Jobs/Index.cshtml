@@ -3,50 +3,39 @@
     ViewData["Title"] = "Download Jobs";
 }
 
-<div class="container-fluid">
-    <h1 class="mt-4">Download Jobs</h1>
-    
-    <div class="card mb-4">
-        <div class="card-header">
-            <ul class="nav nav-tabs card-header-tabs" id="jobTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <a class="nav-link active" id="active-tab" data-toggle="tab" href="#active" role="tab" aria-controls="active" aria-selected="true">
-                        Active Downloads
-                    </a>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <a class="nav-link" id="failed-tab" data-toggle="tab" href="#failed" role="tab" aria-controls="failed" aria-selected="false">
-                        Failed Downloads
-                    </a>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <a class="nav-link" id="completed-tab" data-toggle="tab" href="#completed" role="tab" aria-controls="completed" aria-selected="false">
-                        Completed Downloads
-                    </a>
-                </li>
-            </ul>
+<div class="px-6 py-4">
+    <h1 class="text-3xl font-bold mb-4">Download Jobs</h1>
+
+    <div class="bg-white shadow rounded-lg">
+        <!-- Tabs -->
+        <div class="border-b border-gray-200">
+            <nav class="flex space-x-4" aria-label="Tabs" id="jobTabs">
+                <button class="py-2 px-4 text-blue-600 border-b-2 border-blue-600 font-medium focus:outline-none" data-target="active">Active Downloads</button>
+                <button class="py-2 px-4 text-gray-500 hover:text-blue-600 border-b-2 border-transparent font-medium focus:outline-none" data-target="failed">Failed Downloads</button>
+                <button class="py-2 px-4 text-gray-500 hover:text-blue-600 border-b-2 border-transparent font-medium focus:outline-none" data-target="completed">Completed Downloads</button>
+            </nav>
         </div>
-        <div class="card-body">
-            <div class="tab-content" id="jobTabsContent">
-                <!-- Active Downloads Tab -->
-                <div class="tab-pane fade show active" id="active" role="tabpanel" aria-labelledby="active-tab">
-                    <div id="activeDownloads">
-                        <p class="text-center">Loading active downloads...</p>
-                    </div>
+
+        <!-- Tab Content -->
+        <div class="p-6 space-y-4">
+            <!-- Active Downloads -->
+            <div class="tab-content" id="active">
+                <div id="activeDownloads">
+                    <p class="text-center text-gray-500">Loading active downloads...</p>
                 </div>
-                
-                <!-- Failed Downloads Tab -->
-                <div class="tab-pane fade" id="failed" role="tabpanel" aria-labelledby="failed-tab">
-                    <div id="failedDownloads">
-                        <p class="text-center">Loading failed downloads...</p>
-                    </div>
+            </div>
+
+            <!-- Failed Downloads -->
+            <div class="tab-content hidden" id="failed">
+                <div id="failedDownloads">
+                    <p class="text-center text-gray-500">Loading failed downloads...</p>
                 </div>
-                
-                <!-- Completed Downloads Tab -->
-                <div class="tab-pane fade" id="completed" role="tabpanel" aria-labelledby="completed-tab">
-                    <div id="completedDownloads">
-                        <p class="text-center">Loading completed downloads...</p>
-                    </div>
+            </div>
+
+            <!-- Completed Downloads -->
+            <div class="tab-content hidden" id="completed">
+                <div id="completedDownloads">
+                    <p class="text-center text-gray-500">Loading completed downloads...</p>
                 </div>
             </div>
         </div>
@@ -55,201 +44,179 @@
 
 @section Scripts {
     <script>
-        $(document).ready(function() {
-            // Load active downloads
-            function loadActiveDownloads() {
-                $.ajax({
-                    url: '/api/download-jobs/active',
-                    type: 'GET',
-                    success: function(jobs) {
-                        if (jobs.length === 0) {
-                            $('#activeDownloads').html('<p class="text-center">No active downloads.</p>');
-                            return;
-                        }
-                        
-                        let html = '<div class="table-responsive">';
-                        html += '<table class="table table-bordered" width="100%" cellspacing="0">';
-                        html += '<thead><tr><th>Camera</th><th>File</th><th>Progress</th><th>Started</th><th>Action</th></tr></thead>';
-                        html += '<tbody>';
-                        
-                        jobs.forEach(function(job) {
-                            html += '<tr>';
-                            html += `<td>${job.camera.name}</td>`;
-                            html += `<td>${job.fileName}</td>`;
-                            html += '<td>';
-                            html += `<div class="progress">`;
-                            html += `<div class="progress-bar" role="progressbar" style="width: ${job.progress}%" `;
-                            html += `aria-valuenow="${job.progress}" aria-valuemin="0" aria-valuemax="100">${job.progress}%</div>`;
-                            html += '</div>';
-                            html += '</td>';
-                            html += `<td>${new Date(job.startTime).toLocaleString()}</td>`;
-                            html += `<td><button class="btn btn-sm btn-danger cancel-job" data-id="${job.id}">Cancel</button></td>`;
-                            html += '</tr>';
-                        });
-                        
-                        html += '</tbody></table></div>';
-                        $('#activeDownloads').html(html);
-                        
-                        // Attach event handlers to cancel buttons
-                        $('.cancel-job').click(function() {
-                            const jobId = $(this).data('id');
-                            cancelJob(jobId);
-                        });
-                    },
-                    error: function() {
-                        $('#activeDownloads').html('<p class="text-center text-danger">Failed to load active downloads.</p>');
-                    }
+        // Simple tab switching (Tailwind + vanilla JS)
+        document.querySelectorAll('#jobTabs button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#jobTabs button').forEach(b => {
+                    b.classList.remove('text-blue-600','border-blue-600');
+                    b.classList.add('text-gray-500','border-transparent');
                 });
-            }
-            
-            // Load failed downloads
-            function loadFailedDownloads() {
-                $.ajax({
-                    url: '/api/download-jobs/failed',
-                    type: 'GET',
-                    success: function(jobs) {
-                        if (jobs.length === 0) {
-                            $('#failedDownloads').html('<p class="text-center">No failed downloads.</p>');
-                            return;
-                        }
-                        
-                        let html = '<div class="table-responsive">';
-                        html += '<table class="table table-bordered" width="100%" cellspacing="0">';
-                        html += '<thead><tr><th>Camera</th><th>File</th><th>Error</th><th>Failed At</th><th>Action</th></tr></thead>';
-                        html += '<tbody>';
-                        
-                        jobs.forEach(function(job) {
-                            html += '<tr>';
-                            html += `<td>${job.camera.name}</td>`;
-                            html += `<td>${job.fileName}</td>`;
-                            html += `<td>${job.errorMessage || 'Unknown error'}</td>`;
-                            html += `<td>${new Date(job.updatedAt).toLocaleString()}</td>`;
-                            html += `<td><button class="btn btn-sm btn-primary retry-job" data-id="${job.id}">Retry</button></td>`;
-                            html += '</tr>';
-                        });
-                        
-                        html += '</tbody></table></div>';
-                        $('#failedDownloads').html(html);
-                        
-                        // Attach event handlers to retry buttons
-                        $('.retry-job').click(function() {
-                            const jobId = $(this).data('id');
-                            retryJob(jobId);
-                        });
-                    },
-                    error: function() {
-                        $('#failedDownloads').html('<p class="text-center text-danger">Failed to load failed downloads.</p>');
-                    }
-                });
-            }
-            
-            // Load completed downloads
-            function loadCompletedDownloads() {
-                $.ajax({
-                    url: '/api/download-jobs',
-                    type: 'GET',
-                    success: function(allJobs) {
-                        // Filter completed jobs
-                        const jobs = allJobs.filter(job => job.status === 'completed');
-                        
-                        if (jobs.length === 0) {
-                            $('#completedDownloads').html('<p class="text-center">No completed downloads.</p>');
-                            return;
-                        }
-                        
-                        let html = '<div class="table-responsive">';
-                        html += '<table class="table table-bordered" id="completedJobsTable" width="100%" cellspacing="0">';
-                        html += '<thead><tr><th>Camera</th><th>File</th><th>Size</th><th>Started</th><th>Completed</th></tr></thead>';
-                        html += '<tbody>';
-                        
-                        jobs.forEach(function(job) {
-                            html += '<tr>';
-                            html += `<td>${job.camera.name}</td>`;
-                            html += `<td>${job.fileName}</td>`;
-                            html += `<td>${formatBytes(job.fileSize)}</td>`;
-                            html += `<td>${job.startTime ? new Date(job.startTime).toLocaleString() : 'N/A'}</td>`;
-                            html += `<td>${job.endTime ? new Date(job.endTime).toLocaleString() : 'N/A'}</td>`;
-                            html += '</tr>';
-                        });
-                        
-                        html += '</tbody></table></div>';
-                        $('#completedDownloads').html(html);
-                        
-                        // Initialize DataTable for completed jobs
-                        $('#completedJobsTable').DataTable({
-                            "order": [[4, "desc"]], // Sort by completion time
-                            "pageLength": 10
-                        });
-                    },
-                    error: function() {
-                        $('#completedDownloads').html('<p class="text-center text-danger">Failed to load completed downloads.</p>');
-                    }
-                });
-            }
-            
-            function cancelJob(jobId) {
-                $.ajax({
-                    url: `/api/download-jobs/${jobId}/cancel`,
-                    type: 'POST',
-                    success: function() {
-                        toastr.success('Download job cancelled.');
-                        loadActiveDownloads();
-                    },
-                    error: function() {
-                        toastr.error('Failed to cancel download job.');
-                    }
-                });
-            }
-            
-            function retryJob(jobId) {
-                $.ajax({
-                    url: `/api/download-jobs/${jobId}/retry`,
-                    type: 'POST',
-                    success: function() {
-                        toastr.success('Download job retry initiated.');
-                        loadFailedDownloads();
-                        setTimeout(loadActiveDownloads, 1000);
-                    },
-                    error: function() {
-                        toastr.error('Failed to retry download job.');
-                    }
-                });
-            }
-            
-            function formatBytes(bytes, decimals = 2) {
-                if (bytes === 0) return '0 Bytes';
-                
-                const k = 1024;
-                const dm = decimals < 0 ? 0 : decimals;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-                
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-            }
-            
-            // Load initial data
-            loadActiveDownloads();
-            
-            // Load data for other tabs when they're clicked
-            $('#jobTabs a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-                const target = $(e.target).attr("href");
-                
-                if (target === '#active') {
-                    loadActiveDownloads();
-                } else if (target === '#failed') {
-                    loadFailedDownloads();
-                } else if (target === '#completed') {
-                    loadCompletedDownloads();
-                }
+                btn.classList.add('text-blue-600','border-blue-600');
+                btn.classList.remove('text-gray-500','border-transparent');
+
+                const target = btn.getAttribute('data-target');
+                document.querySelectorAll('.tab-content').forEach(tc => tc.classList.add('hidden'));
+                document.getElementById(target).classList.remove('hidden');
+
+                // Load content dynamically
+                if (target === 'active') loadActiveDownloads();
+                if (target === 'failed') loadFailedDownloads();
+                if (target === 'completed') loadCompletedDownloads();
             });
-            
-            // Refresh active downloads every 5 seconds
-            setInterval(function() {
-                if ($('#active-tab').hasClass('active')) {
-                    loadActiveDownloads();
-                }
-            }, 5000);
         });
+
+        // Ajax functions for downloads
+        function loadActiveDownloads() {
+            fetch('/api/download-jobs/active')
+                .then(res => res.json())
+                .then(jobs => {
+                    const container = document.getElementById('activeDownloads');
+                    if (!jobs.length) return container.innerHTML = '<p class="text-center text-gray-500">No active downloads.</p>';
+                    
+                    let html = `<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Camera</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">File</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Progress</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Started</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">`;
+
+                    jobs.forEach(job => {
+                        html += `<tr>
+                            <td class="px-4 py-2 text-sm text-gray-700">${job.camera.name}</td>
+                            <td class="px-4 py-2 text-sm text-gray-700">${job.fileName}</td>
+                            <td class="px-4 py-2">
+                                <div class="w-full bg-gray-200 rounded h-4">
+                                    <div class="bg-blue-500 h-4 rounded" style="width:${job.progress}%"></div>
+                                </div>
+                                <span class="text-sm text-gray-600">${job.progress}%</span>
+                            </td>
+                            <td class="px-4 py-2 text-sm text-gray-700">${new Date(job.startTime).toLocaleString()}</td>
+                            <td class="px-4 py-2">
+                                <button class="px-2 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 cancel-job" data-id="${job.id}">Cancel</button>
+                            </td>
+                        </tr>`;
+                    });
+
+                    html += '</tbody></table></div>';
+                    container.innerHTML = html;
+
+                    document.querySelectorAll('.cancel-job').forEach(btn => {
+                        btn.addEventListener('click', () => cancelJob(btn.dataset.id));
+                    });
+                })
+                .catch(() => document.getElementById('activeDownloads').innerHTML = '<p class="text-center text-red-500">Failed to load active downloads.</p>');
+        }
+
+        function loadFailedDownloads() {
+            fetch('/api/download-jobs/failed')
+                .then(res => res.json())
+                .then(jobs => {
+                    const container = document.getElementById('failedDownloads');
+                    if (!jobs.length) return container.innerHTML = '<p class="text-center text-gray-500">No failed downloads.</p>';
+                    
+                    let html = `<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Camera</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">File</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Error</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Failed At</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">`;
+
+                    jobs.forEach(job => {
+                        html += `<tr>
+                            <td class="px-4 py-2 text-sm text-gray-700">${job.camera.name}</td>
+                            <td class="px-4 py-2 text-sm text-gray-700">${job.fileName}</td>
+                            <td class="px-4 py-2 text-sm text-red-500">${job.errorMessage || 'Unknown error'}</td>
+                            <td class="px-4 py-2 text-sm text-gray-700">${new Date(job.updatedAt).toLocaleString()}</td>
+                            <td class="px-4 py-2">
+                                <button class="px-2 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 retry-job" data-id="${job.id}">Retry</button>
+                            </td>
+                        </tr>`;
+                    });
+
+                    html += '</tbody></table></div>';
+                    container.innerHTML = html;
+
+                    document.querySelectorAll('.retry-job').forEach(btn => {
+                        btn.addEventListener('click', () => retryJob(btn.dataset.id));
+                    });
+                })
+                .catch(() => document.getElementById('failedDownloads').innerHTML = '<p class="text-center text-red-500">Failed to load failed downloads.</p>');
+        }
+
+        function loadCompletedDownloads() {
+            fetch('/api/download-jobs')
+                .then(res => res.json())
+                .then(allJobs => {
+                    const jobs = allJobs.filter(j => j.status === 'completed');
+                    const container = document.getElementById('completedDownloads');
+                    if (!jobs.length) return container.innerHTML = '<p class="text-center text-gray-500">No completed downloads.</p>';
+
+                    let html = `<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Camera</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">File</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Size</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Started</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Completed</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">`;
+
+                    jobs.forEach(job => {
+                        html += `<tr>
+                            <td class="px-4 py-2 text-sm text-gray-700">${job.camera.name}</td>
+                            <td class="px-4 py-2 text-sm text-gray-700">${job.fileName}</td>
+                            <td class="px-4 py-2 text-sm text-gray-700">${formatBytes(job.fileSize)}</td>
+                            <td class="px-4 py-2 text-sm text-gray-700">${job.startTime ? new Date(job.startTime).toLocaleString() : 'N/A'}</td>
+                            <td class="px-4 py-2 text-sm text-gray-700">${job.endTime ? new Date(job.endTime).toLocaleString() : 'N/A'}</td>
+                        </tr>`;
+                    });
+
+                    html += '</tbody></table></div>';
+                    container.innerHTML = html;
+                })
+                .catch(() => document.getElementById('completedDownloads').innerHTML = '<p class="text-center text-red-500">Failed to load completed downloads.</p>');
+        }
+
+        function cancelJob(id) {
+            fetch(`/api/download-jobs/${id}/cancel`, { method: 'POST' })
+                .then(() => { alert('Download job cancelled'); loadActiveDownloads(); })
+                .catch(() => alert('Failed to cancel download job'));
+        }
+
+        function retryJob(id) {
+            fetch(`/api/download-jobs/${id}/retry`, { method: 'POST' })
+                .then(() => { alert('Retry initiated'); loadFailedDownloads(); setTimeout(loadActiveDownloads, 1000); })
+                .catch(() => alert('Failed to retry download job'));
+        }
+
+        function formatBytes(bytes, decimals = 2) {
+            if (!bytes) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        // Auto-refresh active downloads every 5s if active tab
+        setInterval(() => {
+            const activeTab = document.querySelector('#jobTabs button.text-blue-600');
+            if (activeTab && activeTab.dataset.target === 'active') loadActiveDownloads();
+        }, 5000);
+
+        // Initial load
+        loadActiveDownloads();
     </script>
 }
