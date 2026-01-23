@@ -124,12 +124,31 @@ namespace Hik.Api
         /// <param name="tryTimes">Connecting attempt times (reserved)</param>
         /// <param name="reconnectInterval">Reconnecting interval, unit: milliseconds, default value:30 seconds</param>
         /// <param name="enableReconnect">Enable or disable reconnect function, 0-disable, 1-enable(default)</param>
+        /// <param name="forceReinitialization">Force reinitialization even if already initialized</param>
         /// <returns>TRUE means success, FALSE means failure. </returns>
         /// <remarks>This API is used to initialize SDK. Please call this API before calling any other API</remarks>
-        public static void Initialize(int logLevel = 3, string logDirectory = "HikvisionSDKLogs", bool autoDeleteLogs = true, uint waitTimeMilliseconds = 2000, uint tryTimes = 1, uint reconnectInterval = 10000, bool enableReconnect = true)
+        public static void Initialize(int logLevel = 3, string logDirectory = "HikvisionSDKLogs", bool autoDeleteLogs = true, uint waitTimeMilliseconds = 2000, uint tryTimes = 1, uint reconnectInterval = 10000, bool enableReconnect = true, bool forceReinitialization = false)
         {
-            if (initialized == false)
+            if (initialized == false || forceReinitialization)
             {
+                // If already initialized and force reinitialization is requested, clean up first
+                if (initialized && forceReinitialization)
+                {
+                    try
+                    {
+                        Cleanup();
+                    }
+                    catch
+                    {
+                        // Ignore cleanup errors during forced reinitialization
+                    }
+                    initialized = false;
+                }
+                
+                // Set the library path to the current directory
+                string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                Environment.SetEnvironmentVariable("LD_LIBRARY_PATH", currentDirectory);
+                
                 SdkHelper.InvokeSDK(() => NET_DVR_Init());
                 SdkHelper.InvokeSDK(() => NET_DVR_SetLogToFile(logLevel, logDirectory, autoDeleteLogs));
                 SdkHelper.InvokeSDK(() => NET_DVR_SetConnectTime(waitTimeMilliseconds, tryTimes));
@@ -160,7 +179,32 @@ namespace Hik.Api
         /// </summary>
         /// <returns>TRUE means success, FALSE means failure</returns>
         /// <remarks>This API is used to release SDK resource. Please calling it before closing the program.</remarks>
-        public static void Cleanup() => SdkHelper.InvokeSDK(() => NET_DVR_Cleanup());
+        public static void Cleanup() 
+        {
+            try
+            {
+                SdkHelper.InvokeSDK(() => NET_DVR_Cleanup());
+            }
+            finally
+            {
+                // Reset initialization flag regardless of cleanup success
+                initialized = false;
+            }
+        }
+        
+        /// <summary>
+        /// Set the library path for the SDK to find the required .so files
+        /// </summary>
+        /// <param name="path">Path to the directory containing the library files</param>
+        public static void SetLibraryPath(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                path = AppDomain.CurrentDomain.BaseDirectory;
+            }
+            
+            Environment.SetEnvironmentVariable("LD_LIBRARY_PATH", path);
+        }
 
         /// <summary>
         /// This API is used to logout certain user.
