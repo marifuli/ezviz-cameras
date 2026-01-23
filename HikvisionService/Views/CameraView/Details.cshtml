@@ -1,0 +1,147 @@
+@model HikvisionService.Models.Camera
+@{
+    ViewData["Title"] = "Camera Details";
+}
+
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Camera Details</h1>
+    <div class="flex space-x-2">
+        <a href="@Url.Action("Edit", new { id = Model.Id })" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+            Edit
+        </a>
+        <a href="@Url.Action("TestConnection", new { id = Model.Id })" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path>
+            </svg>
+            Test Connection
+        </a>
+        <a href="@Url.Action("Index")" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Back to List
+        </a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+        <p>@TempData["SuccessMessage"]</p>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <p>@TempData["ErrorMessage"]</p>
+    </div>
+}
+
+<div class="bg-white shadow-md rounded-lg overflow-hidden mb-8">
+    <div class="p-6">
+        <h2 class="text-xl font-semibold mb-4">Camera Information</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <p class="text-sm font-medium text-gray-500">Name</p>
+                <p class="text-lg">@Model.Name</p>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-500">Store</p>
+                <p class="text-lg">
+                    @if (Model.Store != null)
+                    {
+                        <a href="@Url.Action("Details", "StoreView", new { id = Model.StoreId })" class="text-indigo-600 hover:text-indigo-900">
+                            @Model.Store.Name
+                        </a>
+                    }
+                    else
+                    {
+                        <span>No Store</span>
+                    }
+                </p>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-500">IP Address</p>
+                <p class="text-lg">@Model.IpAddress</p>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-500">Port</p>
+                <p class="text-lg">@Model.Port</p>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-500">Username</p>
+                <p class="text-lg">@(string.IsNullOrEmpty(Model.Username) ? "Not set" : Model.Username)</p>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-500">Password</p>
+                <p class="text-lg">@(string.IsNullOrEmpty(Model.Password) ? "Not set" : "********")</p>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-500">Server Port</p>
+                <p class="text-lg">@(Model.ServerPort.HasValue ? Model.ServerPort.Value.ToString() : "Not set")</p>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-500">Created At</p>
+                <p class="text-lg">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</p>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-500">Updated At</p>
+                <p class="text-lg">@Model.UpdatedAt.ToString("yyyy-MM-dd HH:mm:ss")</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.FileDownloadJobs.Any())
+{
+    <h2 class="text-xl font-semibold mb-4">Download Jobs</h2>
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Start Time
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        End Time
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Created
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @foreach (var job in Model.FileDownloadJobs)
+                {
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">@(job.StartTime.HasValue ? job.StartTime.Value.ToString("yyyy-MM-dd HH:mm") : "Not started")</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">@(job.EndTime.HasValue ? job.EndTime.Value.ToString("yyyy-MM-dd HH:mm") : "Not completed")</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">@job.Status</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-500">@job.CreatedAt.ToString("yyyy-MM-dd HH:mm")</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="bg-yellow-50 border border-yellow-400 text-yellow-700 p-4 rounded">
+        <p>No download jobs for this camera.</p>
+    </div>
+}

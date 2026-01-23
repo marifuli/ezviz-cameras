@@ -1,0 +1,83 @@
+@model HikvisionService.Controllers.CameraViewController.CameraViewModel
+@{
+    ViewData["Title"] = "Edit Camera";
+}
+
+<div class="mb-6">
+    <h1 class="text-2xl font-bold">Edit Camera</h1>
+</div>
+
+<div class="bg-white shadow-md rounded-lg p-6 max-w-lg">
+    <form asp-action="Edit" method="POST">
+        <div asp-validation-summary="ModelOnly" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"></div>
+        
+        <input type="hidden" asp-for="Id" />
+        
+        <div class="mb-4">
+            <label asp-for="StoreId" class="block text-gray-700 text-sm font-bold mb-2">Store</label>
+            <select asp-for="StoreId" asp-items="ViewBag.Stores" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                <option value="">-- Select Store --</option>
+            </select>
+            <span asp-validation-for="StoreId" class="text-red-500 text-xs italic"></span>
+        </div>
+        
+        <div class="mb-4">
+            <label asp-for="Name" class="block text-gray-700 text-sm font-bold mb-2">Camera Name</label>
+            <input asp-for="Name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+            <span asp-validation-for="Name" class="text-red-500 text-xs italic"></span>
+        </div>
+        
+        <div class="mb-4">
+            <label asp-for="IpAddress" class="block text-gray-700 text-sm font-bold mb-2">IP Address</label>
+            <input asp-for="IpAddress" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+            <span asp-validation-for="IpAddress" class="text-red-500 text-xs italic"></span>
+        </div>
+        
+        <div class="mb-4">
+            <label asp-for="Port" class="block text-gray-700 text-sm font-bold mb-2">Port</label>
+            <input asp-for="Port" type="number" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+            <span asp-validation-for="Port" class="text-red-500 text-xs italic"></span>
+        </div>
+        
+        <div class="mb-4">
+            <label asp-for="Username" class="block text-gray-700 text-sm font-bold mb-2">Username (Optional)</label>
+            <input asp-for="Username" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+            <span asp-validation-for="Username" class="text-red-500 text-xs italic"></span>
+        </div>
+        
+        <div class="mb-4">
+            <label asp-for="Password" class="block text-gray-700 text-sm font-bold mb-2">Password (Optional)</label>
+            <input asp-for="Password" type="password" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Leave blank to keep current password" />
+            <span asp-validation-for="Password" class="text-red-500 text-xs italic"></span>
+            <p class="text-gray-500 text-xs mt-1">Leave blank to keep current password</p>
+        </div>
+        
+        <div class="mb-4">
+            <label asp-for="ServerPort" class="block text-gray-700 text-sm font-bold mb-2">Server Port (Optional)</label>
+            <input asp-for="ServerPort" type="number" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+            <span asp-validation-for="ServerPort" class="text-red-500 text-xs italic"></span>
+        </div>
+        
+        <div class="flex items-center justify-between">
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                Save
+            </button>
+            <a href="@Url.Action("Index")" class="inline-block align-baseline font-bold text-sm text-indigo-600 hover:text-indigo-800">
+                Back to List
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for dropdown
+            $('select').select2({
+                theme: "classic",
+                width: '100%'
+            });
+        });
+    </script>
+}
