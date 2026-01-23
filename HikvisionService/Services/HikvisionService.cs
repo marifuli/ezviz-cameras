@@ -30,8 +30,18 @@ public class HikvisionService : IHikvisionService
 
         try
         {
+            // Set the library path to the current directory
+            string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            HikApi.SetLibraryPath(currentDirectory);
+            
             // Initialize with proper logging and force reinitialization
-            HikApi.Initialize();
+            HikApi.Initialize(
+                logLevel: 3, 
+                logDirectory: "HikvisionSDKLogs", 
+                autoDeleteLogs: true,
+                waitTimeMilliseconds: 5000, // Increase timeout for better reliability
+                forceReinitialization: true // Force reinitialization to ensure clean state
+            );
 
             // Login to the camera
             var hikApi = HikApi.Login(camera.IpAddress, camera.Port, camera.Username ?? "admin", camera.Password ?? "");
@@ -121,8 +131,18 @@ public class HikvisionService : IHikvisionService
 
         try
         {
+            // Set the library path to the current directory
+            string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            HikApi.SetLibraryPath(currentDirectory);
+            
             // Initialize with proper logging and force reinitialization
-            HikApi.Initialize();
+            HikApi.Initialize(
+                logLevel: 3, 
+                logDirectory: "HikvisionSDKLogs", 
+                autoDeleteLogs: true,
+                waitTimeMilliseconds: 5000, // Increase timeout for better reliability
+                forceReinitialization: true // Force reinitialization to ensure clean state
+            );
             // Login to camera
             var hikApi = HikApi.Login(camera.IpAddress, camera.Port, camera.Username ?? "admin", camera.Password ?? "");
             
