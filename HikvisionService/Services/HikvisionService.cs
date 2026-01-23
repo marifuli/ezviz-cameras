@@ -30,8 +30,14 @@ public class HikvisionService : IHikvisionService
 
         try
         {
-            // Initialize the Hikvision SDK
-            HikApi.Initialize();
+            // Initialize with proper logging and force reinitialization
+            HikApi.Initialize(
+                logLevel: 3, 
+                logDirectory: "HikvisionSDKLogs", 
+                autoDeleteLogs: true,
+                waitTimeMilliseconds: 5000, // Increase timeout for better reliability
+                forceReinitialization: true // Force reinitialization to ensure clean state
+            );
 
             // Login to the camera
             var hikApi = HikApi.Login(camera.IpAddress, camera.Port, camera.Username ?? "admin", camera.Password ?? "");
@@ -87,13 +93,25 @@ public class HikvisionService : IHikvisionService
             }
             finally
             {
+                // Always logout when done with the camera
                 hikApi.Logout();
-                HikApi.Cleanup();
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get files from camera {CameraId}: {ErrorMessage}", cameraId, ex.Message);
+        }
+        finally
+        {
+            // Always clean up SDK resources, even if an exception occurs
+            try
+            {
+                HikApi.Cleanup();
+            }
+            catch (Exception cleanupEx)
+            {
+                _logger.LogWarning(cleanupEx, "Failed to clean up Hikvision SDK resources");
+            }
         }
 
         return files;
@@ -109,25 +127,45 @@ public class HikvisionService : IHikvisionService
 
         try
         {
-            HikApi.Initialize();
+            // Initialize with proper logging and force reinitialization
+            HikApi.Initialize(
+                logLevel: 3, 
+                logDirectory: "HikvisionSDKLogs", 
+                autoDeleteLogs: true,
+                waitTimeMilliseconds: 5000, // Increase timeout for better reliability
+                forceReinitialization: true // Force reinitialization to ensure clean state
+            
+            // Login to camera
             var hikApi = HikApi.Login(camera.IpAddress, camera.Port, camera.Username ?? "admin", camera.Password ?? "");
             
             // Try to get camera time to test connection
             // var cameraTime = hikApi.ConfigService.GetTime();
-            _logger.LogInformation("Camera {CameraName} connection test successful. Camera time: {Password}", camera.Name, camera.Password);
+            _logger.LogInformation("Camera {CameraName} connection test successful", camera.Name);
             foreach (var channel in hikApi.IpChannels)
             {
-                Console.WriteLine($"{channel.Name} {channel.ChannelNumber}; IsOnline : {channel.IsOnline};");
+                _logger.LogInformation("Channel: {ChannelName} {ChannelNumber}; IsOnline: {IsOnline}", 
+                    channel.Name, channel.ChannelNumber, channel.IsOnline);
             }
             
             hikApi.Logout();
-            HikApi.Cleanup();
             return true;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Camera {CameraId} connection test failed: {ErrorMessage}", cameraId, ex.Message);
             return false;
+        }
+        finally
+        {
+            // Always clean up SDK resources, even if an exception occurs
+            try
+            {
+                HikApi.Cleanup();
+            }
+            catch (Exception cleanupEx)
+            {
+                _logger.LogWarning(cleanupEx, "Failed to clean up Hikvision SDK resources");
+            }
         }
     }
 
