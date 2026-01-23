@@ -31,13 +31,7 @@ public class HikvisionService : IHikvisionService
         try
         {
             // Initialize with proper logging and force reinitialization
-            HikApi.Initialize(
-                logLevel: 3, 
-                logDirectory: "HikvisionSDKLogs", 
-                autoDeleteLogs: true,
-                waitTimeMilliseconds: 5000, // Increase timeout for better reliability
-                forceReinitialization: true // Force reinitialization to ensure clean state
-            );
+            HikApi.Initialize();
 
             // Login to the camera
             var hikApi = HikApi.Login(camera.IpAddress, camera.Port, camera.Username ?? "admin", camera.Password ?? "");
@@ -128,13 +122,7 @@ public class HikvisionService : IHikvisionService
         try
         {
             // Initialize with proper logging and force reinitialization
-            HikApi.Initialize(
-                logLevel: 3, 
-                logDirectory: "HikvisionSDKLogs", 
-                autoDeleteLogs: true,
-                waitTimeMilliseconds: 5000, // Increase timeout for better reliability
-                forceReinitialization: true // Force reinitialization to ensure clean state
-            
+            HikApi.Initialize();
             // Login to camera
             var hikApi = HikApi.Login(camera.IpAddress, camera.Port, camera.Username ?? "admin", camera.Password ?? "");
             
