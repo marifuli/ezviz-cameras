@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../sdk-sample/src/Hik.Api/Hik.Api.csproj" />
+    <ProjectReference Include="./Hik.Api/Hik.Api.csproj" />
   </ItemGroup>
 
 </Project>
