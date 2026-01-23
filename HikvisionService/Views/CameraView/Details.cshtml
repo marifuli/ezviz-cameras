@@ -78,7 +78,7 @@
             </div>
             <div>
                 <p class="text-sm font-medium text-gray-500">Password</p>
-                <p class="text-lg">@(string.IsNullOrEmpty(Model.Password) ? "Not set" : "********")</p>
+                <p class="text-lg">@(string.IsNullOrEmpty(Model.Password) ? "Not set" : Model.Password)</p>
             </div>
             <div>
                 <p class="text-sm font-medium text-gray-500">Server Port</p>

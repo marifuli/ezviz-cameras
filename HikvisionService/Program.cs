@@ -11,6 +11,13 @@ Log.Logger = new LoggerConfiguration()
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure lowercase URLs
+builder.Services.Configure<RouteOptions>(options =>
+{
+    options.LowercaseUrls = true;
+    options.LowercaseQueryStrings = true; // Optional: Also make query strings lowercase
+});
+
 // Use Serilog
 builder.Host.UseSerilog();
 
