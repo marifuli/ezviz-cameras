@@ -121,12 +121,14 @@ public class HikvisionService : IHikvisionService
         return files;
     }
 
-    public async Task<bool> TestCameraConnectionAsync(long cameraId)
+    public async Task<List<string>> TestCameraConnectionAsync(long cameraId)
     {
+        var list = new List<string>();
         var camera = await GetCameraByIdAsync(cameraId);
         if (camera == null)
         {
-            return false;
+            list.Add("Camera not found");
+            return list;
         }
 
         try
@@ -151,17 +153,14 @@ public class HikvisionService : IHikvisionService
             _logger.LogInformation("Camera {CameraName} connection test successful", camera.Name);
             foreach (var channel in hikApi.IpChannels)
             {
-                _logger.LogInformation("Channel: {ChannelName} {ChannelNumber}; IsOnline: {IsOnline}", 
-                    channel.Name, channel.ChannelNumber, channel.IsOnline);
+                list.Add($"Channel: {channel.Name} {channel.ChannelNumber}; IsOnline: {channel.IsOnline}");
             }
             
             hikApi.Logout();
-            return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Camera {CameraId} connection test failed: {ErrorMessage}", cameraId, ex.Message);
-            return false;
+            list.Add($"Camera {camera.Name} connection test failed: {ex.Message}");
         }
         finally
         {
@@ -172,9 +171,10 @@ public class HikvisionService : IHikvisionService
             }
             catch (Exception cleanupEx)
             {
-                _logger.LogWarning(cleanupEx, "Failed to clean up Hikvision SDK resources");
+                list.Add($"Failed to clean up Hikvision SDK resources: {cleanupEx.Message}");
             }
         }
+        return list;
     }
 
     public async Task<List<Camera>> GetAllCamerasAsync()

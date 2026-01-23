@@ -286,16 +286,8 @@ public class CameraViewController : Controller
     {
         try
         {
-            var isConnected = await _hikvisionService.TestCameraConnectionAsync(id);
-            
-            if (isConnected)
-            {
-                TempData["SuccessMessage"] = "Connection test successful! Camera is reachable.";
-            }
-            else
-            {
-                TempData["ErrorMessage"] = "Connection test failed. Camera is not reachable.";
-            }
+            var chList = await _hikvisionService.TestCameraConnectionAsync(id);
+            TempData["SuccessMessage"] = "Camera channels are: <br> " + string.Join(" <br> ", chList);
             
             return RedirectToAction(nameof(Details), new { id });
         }
