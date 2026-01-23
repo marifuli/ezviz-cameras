@@ -26,7 +26,6 @@ public class HikvisionService : IHikvisionService
     public async Task<List<HikRemoteFile>> GetAvailableFilesAsync(long cameraId, DateTime startTime, DateTime endTime, string fileType = "both")
     {
         var camera = await GetCameraByIdAsync(cameraId);
-        _logger.LogWarning("GetAvailableFilesAsync: Camera with ID not found", cameraId);
         if (camera == null)
         {
             _logger.LogWarning("GetAvailableFilesAsync: Camera with ID {CameraId} not found", cameraId);
@@ -180,272 +179,6 @@ public class HikvisionService : IHikvisionService
             {
                 list.Add($"Failed to clean up Hikvision SDK resources: {cleanupEx.Message}");
             }
-        
-            // Camera health check methods
-            public async Task<bool> CheckCameraConnectionAsync(long cameraId)
-            {
-                var camera = await GetCameraByIdAsync(cameraId);
-                if (camera == null)
-                {
-                    _logger.LogWarning("CheckCameraConnectionAsync: Camera with ID {CameraId} not found", cameraId);
-                    return false;
-                }
-        
-                try
-                {
-                    // Set the library path to the current directory
-                    string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-                    HikApi.SetLibraryPath(currentDirectory);
-                    
-                    // Initialize with proper logging and force reinitialization
-                    HikApi.Initialize(
-                        logLevel: 3,
-                        logDirectory: "HikvisionSDKLogs",
-                        autoDeleteLogs: true,
-                        waitTimeMilliseconds: 5000,
-                        forceReinitialization: true
-                    );
-        
-                    // Login to camera with a short timeout
-                    var hikApi = HikApi.Login(
-                        camera.IpAddress,
-                        camera.Port,
-                        camera.Username ?? "admin",
-                        camera.Password ?? ""
-                    );
-                    
-                    // If we get here, the camera is online
-                    _logger.LogDebug("Camera {CameraName} ({CameraId}) is online", camera.Name, camera.Id);
-                    
-                    // Update camera status
-                    camera.IsOnline = true;
-                    camera.LastOnlineAt = DateTime.UtcNow;
-                    camera.UpdatedAt = DateTime.UtcNow;
-                    await _context.SaveChangesAsync();
-                    
-                    // Logout and cleanup
-                    hikApi.Logout();
-                    HikApi.Cleanup();
-                    
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogDebug(ex, "Camera {CameraName} ({CameraId}) is offline: {ErrorMessage}",
-                        camera.Name, camera.Id, ex.Message);
-                    
-                    // Update camera status
-                    camera.IsOnline = false;
-                    camera.UpdatedAt = DateTime.UtcNow;
-                    await _context.SaveChangesAsync();
-                    
-                    // Ensure cleanup even if an exception occurs
-                    try
-                    {
-                        HikApi.Cleanup();
-                    }
-                    catch
-                    {
-                        // Ignore cleanup errors
-                    }
-                    
-                    return false;
-                }
-            }
-        
-            public async Task TriggerCameraHealthCheckAsync()
-            {
-                using var scope = _serviceProvider.CreateScope();
-                var cameraHealthCheckService = scope.ServiceProvider.GetRequiredService<CameraHealthCheckService>();
-                await cameraHealthCheckService.CheckCamerasHealthAsync();
-            }
-        
-            // Storage drive methods
-            public async Task<List<StorageDrive>> GetAllStorageDrivesAsync()
-            {
-                return await _context.StorageDrives
-                    .OrderBy(d => d.Name)
-                    .ToListAsync();
-            }
-        
-            public async Task<StorageDrive?> GetStorageDriveByIdAsync(long id)
-            {
-                return await _context.StorageDrives
-                    .FirstOrDefaultAsync(d => d.Id == id);
-            }
-        
-            public async Task<StorageDrive> AddStorageDriveAsync(StorageDrive drive)
-            {
-                drive.CreatedAt = DateTime.UtcNow;
-                drive.UpdatedAt = DateTime.UtcNow;
-                drive.LastCheckedAt = DateTime.UtcNow;
-                
-                _context.StorageDrives.Add(drive);
-                await _context.SaveChangesAsync();
-                
-                return drive;
-            }
-        
-            public async Task<bool> UpdateStorageDriveAsync(StorageDrive drive)
-            {
-                var existingDrive = await _context.StorageDrives.FindAsync(drive.Id);
-                if (existingDrive == null)
-                {
-                    return false;
-                }
-                
-                existingDrive.Name = drive.Name;
-                existingDrive.RootPath = drive.RootPath;
-                existingDrive.UpdatedAt = DateTime.UtcNow;
-                
-                await _context.SaveChangesAsync();
-                return true;
-            }
-        
-            public async Task<bool> DeleteStorageDriveAsync(long id)
-            {
-                var drive = await _context.StorageDrives.FindAsync(id);
-                if (drive == null)
-                {
-                    return false;
-                }
-                
-                _context.StorageDrives.Remove(drive);
-                await _context.SaveChangesAsync();
-                return true;
-            }
-        
-            public async Task TriggerStorageCheckAsync()
-            {
-                using var scope = _serviceProvider.CreateScope();
-                var storageMonitoringService = scope.ServiceProvider.GetRequiredService<StorageMonitoringService>();
-                await storageMonitoringService.CheckStorageDrivesAsync();
-            }
-        
-            // Download job methods
-            public async Task<List<FileDownloadJob>> GetAllDownloadJobsAsync()
-            {
-                return await _context.FileDownloadJobs
-                    .Include(j => j.Camera)
-                    .OrderByDescending(j => j.CreatedAt)
-                    .ToListAsync();
-            }
-        
-            public async Task<List<FileDownloadJob>> GetActiveDownloadJobsAsync()
-            {
-                return await _context.FileDownloadJobs
-                    .Include(j => j.Camera)
-                    .Where(j => j.Status == "downloading")
-                    .OrderByDescending(j => j.StartTime)
-                    .ToListAsync();
-            }
-        
-            public async Task<List<FileDownloadJob>> GetFailedDownloadJobsAsync()
-            {
-                return await _context.FileDownloadJobs
-                    .Include(j => j.Camera)
-                    .Where(j => j.Status == "failed")
-                    .OrderByDescending(j => j.UpdatedAt)
-                    .ToListAsync();
-            }
-        
-            public async Task<FileDownloadJob?> GetDownloadJobByIdAsync(long id)
-            {
-                return await _context.FileDownloadJobs
-                    .Include(j => j.Camera)
-                    .FirstOrDefaultAsync(j => j.Id == id);
-            }
-        
-            public async Task<bool> RetryDownloadJobAsync(long id)
-            {
-                using var scope = _serviceProvider.CreateScope();
-                var downloadJobService = scope.ServiceProvider.GetRequiredService<DownloadJobService>();
-                await downloadJobService.RetryJobAsync(id);
-                return true;
-            }
-        
-            public async Task<bool> CancelDownloadJobAsync(long id)
-            {
-                using var scope = _serviceProvider.CreateScope();
-                var downloadJobService = scope.ServiceProvider.GetRequiredService<DownloadJobService>();
-                await downloadJobService.CancelJobAsync(id);
-                return true;
-            }
-        
-            // Dashboard methods
-            public async Task<DashboardViewModel> GetDashboardDataAsync()
-            {
-                var dashboard = new DashboardViewModel();
-                
-                // Get camera statistics
-                var cameras = await _context.Cameras.ToListAsync();
-                dashboard.TotalCameras = cameras.Count;
-                dashboard.OnlineCameras = cameras.Count(c => c.IsOnline);
-                dashboard.OfflineCameras = cameras.Count(c => !c.IsOnline);
-                
-                // Get job statistics
-                dashboard.ActiveDownloadJobs = await _context.FileDownloadJobs
-                    .CountAsync(j => j.Status == "downloading");
-                dashboard.FailedDownloadJobs = await _context.FileDownloadJobs
-                    .CountAsync(j => j.Status == "failed");
-                
-                // Get offline cameras list
-                var offlineCameras = await _context.Cameras
-                    .Where(c => !c.IsOnline)
-                    .OrderByDescending(c => c.LastOnlineAt)
-                    .Take(10)
-                    .ToListAsync();
-                
-                foreach (var camera in offlineCameras)
-                {
-                    var cameraStatus = new CameraStatusViewModel
-                    {
-                        Id = camera.Id,
-                        Name = camera.Name,
-                        IsOnline = camera.IsOnline,
-                        LastOnlineAt = camera.LastOnlineAt,
-                        LastDownloadedAt = camera.LastDownloadedAt,
-                        Status = await GetCameraStatusAsync(camera.Id)
-                    };
-                    
-                    dashboard.OfflineCamerasList.Add(cameraStatus);
-                }
-                
-                // Get storage drives
-                var drives = await _context.StorageDrives.ToListAsync();
-                foreach (var drive in drives)
-                {
-                    var driveViewModel = new StorageDriveViewModel
-                    {
-                        Id = drive.Id,
-                        Name = drive.Name,
-                        RootPath = drive.RootPath,
-                        TotalSpace = drive.TotalSpace,
-                        UsedSpace = drive.UsedSpace,
-                        FreeSpace = drive.FreeSpace,
-                        Status = drive.Status,
-                        LastCheckedAt = drive.LastCheckedAt
-                    };
-                    
-                    dashboard.StorageDrives.Add(driveViewModel);
-                }
-                
-                return dashboard;
-            }
-            
-            private async Task<string> GetCameraStatusAsync(long cameraId)
-            {
-                // Check if camera has active downloads
-                bool hasActiveDownloads = await _context.FileDownloadJobs
-                    .AnyAsync(j => j.CameraId == cameraId && j.Status == "downloading");
-                
-                if (hasActiveDownloads)
-                {
-                    return "Downloading";
-                }
-                
-                return "Idle";
-            }
         }
         return list;
     }
@@ -463,5 +196,271 @@ public class HikvisionService : IHikvisionService
         return await _context.Cameras
             .Include(c => c.Store)
             .FirstOrDefaultAsync(c => c.Id == id);
+    }
+
+    // Camera health check methods
+    public async Task<bool> CheckCameraConnectionAsync(long cameraId)
+    {
+        var camera = await GetCameraByIdAsync(cameraId);
+        if (camera == null)
+        {
+            _logger.LogWarning("CheckCameraConnectionAsync: Camera with ID {CameraId} not found", cameraId);
+            return false;
+        }
+
+        try
+        {
+            // Set the library path to the current directory
+            string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            HikApi.SetLibraryPath(currentDirectory);
+            
+            // Initialize with proper logging and force reinitialization
+            HikApi.Initialize(
+                logLevel: 3,
+                logDirectory: "HikvisionSDKLogs",
+                autoDeleteLogs: true,
+                waitTimeMilliseconds: 5000,
+                forceReinitialization: true
+            );
+
+            // Login to camera with a short timeout
+            var hikApi = HikApi.Login(
+                camera.IpAddress,
+                camera.Port,
+                camera.Username ?? "admin",
+                camera.Password ?? ""
+            );
+            
+            // If we get here, the camera is online
+            _logger.LogDebug("Camera {CameraName} ({CameraId}) is online", camera.Name, camera.Id);
+            
+            // Update camera status
+            camera.IsOnline = true;
+            camera.LastOnlineAt = DateTime.UtcNow;
+            camera.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            
+            // Logout and cleanup
+            hikApi.Logout();
+            HikApi.Cleanup();
+            
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Camera {CameraName} ({CameraId}) is offline: {ErrorMessage}",
+                camera.Name, camera.Id, ex.Message);
+            
+            // Update camera status
+            camera.IsOnline = false;
+            camera.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            
+            // Ensure cleanup even if an exception occurs
+            try
+            {
+                HikApi.Cleanup();
+            }
+            catch
+            {
+                // Ignore cleanup errors
+            }
+            
+            return false;
+        }
+    }
+
+    public async Task TriggerCameraHealthCheckAsync()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var cameraHealthCheckService = scope.ServiceProvider.GetRequiredService<CameraHealthCheckService>();
+        await cameraHealthCheckService.CheckCamerasHealthAsync();
+    }
+
+    // Storage drive methods
+    public async Task<List<StorageDrive>> GetAllStorageDrivesAsync()
+    {
+        return await _context.StorageDrives
+            .OrderBy(d => d.Name)
+            .ToListAsync();
+    }
+
+    public async Task<StorageDrive?> GetStorageDriveByIdAsync(long id)
+    {
+        return await _context.StorageDrives
+            .FirstOrDefaultAsync(d => d.Id == id);
+    }
+
+    public async Task<StorageDrive> AddStorageDriveAsync(StorageDrive drive)
+    {
+        drive.CreatedAt = DateTime.UtcNow;
+        drive.UpdatedAt = DateTime.UtcNow;
+        drive.LastCheckedAt = DateTime.UtcNow;
+        
+        _context.StorageDrives.Add(drive);
+        await _context.SaveChangesAsync();
+        
+        return drive;
+    }
+
+    public async Task<bool> UpdateStorageDriveAsync(StorageDrive drive)
+    {
+        var existingDrive = await _context.StorageDrives.FindAsync(drive.Id);
+        if (existingDrive == null)
+        {
+            return false;
+        }
+        
+        existingDrive.Name = drive.Name;
+        existingDrive.RootPath = drive.RootPath;
+        existingDrive.UpdatedAt = DateTime.UtcNow;
+        
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> DeleteStorageDriveAsync(long id)
+    {
+        var drive = await _context.StorageDrives.FindAsync(id);
+        if (drive == null)
+        {
+            return false;
+        }
+        
+        _context.StorageDrives.Remove(drive);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task TriggerStorageCheckAsync()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var storageMonitoringService = scope.ServiceProvider.GetRequiredService<StorageMonitoringService>();
+        await storageMonitoringService.CheckStorageDrivesAsync();
+    }
+
+    // Download job methods
+    public async Task<List<FileDownloadJob>> GetAllDownloadJobsAsync()
+    {
+        return await _context.FileDownloadJobs
+            .Include(j => j.Camera)
+            .OrderByDescending(j => j.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<List<FileDownloadJob>> GetActiveDownloadJobsAsync()
+    {
+        return await _context.FileDownloadJobs
+            .Include(j => j.Camera)
+            .Where(j => j.Status == "downloading")
+            .OrderByDescending(j => j.StartTime)
+            .ToListAsync();
+    }
+
+    public async Task<List<FileDownloadJob>> GetFailedDownloadJobsAsync()
+    {
+        return await _context.FileDownloadJobs
+            .Include(j => j.Camera)
+            .Where(j => j.Status == "failed")
+            .OrderByDescending(j => j.UpdatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<FileDownloadJob?> GetDownloadJobByIdAsync(long id)
+    {
+        return await _context.FileDownloadJobs
+            .Include(j => j.Camera)
+            .FirstOrDefaultAsync(j => j.Id == id);
+    }
+
+    public async Task<bool> RetryDownloadJobAsync(long id)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var downloadJobService = scope.ServiceProvider.GetRequiredService<DownloadJobService>();
+        await downloadJobService.RetryJobAsync(id);
+        return true;
+    }
+
+    public async Task<bool> CancelDownloadJobAsync(long id)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var downloadJobService = scope.ServiceProvider.GetRequiredService<DownloadJobService>();
+        await downloadJobService.CancelJobAsync(id);
+        return true;
+    }
+
+    // Dashboard methods
+    public async Task<DashboardViewModel> GetDashboardDataAsync()
+    {
+        var dashboard = new DashboardViewModel();
+        
+        // Get camera statistics
+        var cameras = await _context.Cameras.ToListAsync();
+        dashboard.TotalCameras = cameras.Count;
+        dashboard.OnlineCameras = cameras.Count(c => c.IsOnline);
+        dashboard.OfflineCameras = cameras.Count(c => !c.IsOnline);
+        
+        // Get job statistics
+        dashboard.ActiveDownloadJobs = await _context.FileDownloadJobs
+            .CountAsync(j => j.Status == "downloading");
+        dashboard.FailedDownloadJobs = await _context.FileDownloadJobs
+            .CountAsync(j => j.Status == "failed");
+        
+        // Get offline cameras list
+        var offlineCameras = await _context.Cameras
+            .Where(c => !c.IsOnline)
+            .OrderByDescending(c => c.LastOnlineAt)
+            .Take(10)
+            .ToListAsync();
+        
+        foreach (var camera in offlineCameras)
+        {
+            var cameraStatus = new CameraStatusViewModel
+            {
+                Id = camera.Id,
+                Name = camera.Name,
+                IsOnline = camera.IsOnline,
+                LastOnlineAt = camera.LastOnlineAt,
+                LastDownloadedAt = camera.LastDownloadedAt,
+                Status = await GetCameraStatusAsync(camera.Id)
+            };
+            
+            dashboard.OfflineCamerasList.Add(cameraStatus);
+        }
+        
+        // Get storage drives
+        var drives = await _context.StorageDrives.ToListAsync();
+        foreach (var drive in drives)
+        {
+            var driveViewModel = new StorageDriveViewModel
+            {
+                Id = drive.Id,
+                Name = drive.Name,
+                RootPath = drive.RootPath,
+                TotalSpace = drive.TotalSpace,
+                UsedSpace = drive.UsedSpace,
+                FreeSpace = drive.FreeSpace,
+                Status = drive.Status,
+                LastCheckedAt = drive.LastCheckedAt
+            };
+            
+            dashboard.StorageDrives.Add(driveViewModel);
+        }
+        
+        return dashboard;
+    }
+    
+    private async Task<string> GetCameraStatusAsync(long cameraId)
+    {
+        // Check if camera has active downloads
+        bool hasActiveDownloads = await _context.FileDownloadJobs
+            .AnyAsync(j => j.CameraId == cameraId && j.Status == "downloading");
+        
+        if (hasActiveDownloads)
+        {
+            return "Downloading";
+        }
+        
+        return "Idle";
     }
 }

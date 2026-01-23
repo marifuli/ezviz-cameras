@@ -149,7 +149,7 @@ public class CameraHealthCheckService : BackgroundService
         }
     }
 
-    private async Task CheckForNewFootageAsync(Camera camera, HikApi hikApi)
+    private async Task CheckForNewFootageAsync(Camera camera, Hik.Api.Abstraction.IHikApi hikApi)
     {
         try
         {
@@ -192,9 +192,9 @@ public class CameraHealthCheckService : BackgroundService
                 foreach (var file in files)
                 {
                     // Check if a job already exists for this file
-                    bool jobExists = await dbContext.FileDownloadJobs.AnyAsync(j => 
-                        j.CameraId == camera.Id && 
-                        j.FileName == file.FileName);
+                    bool jobExists = await dbContext.FileDownloadJobs.AnyAsync(j =>
+                        j.CameraId == camera.Id &&
+                        j.FileName == file.Name);
                     
                     if (!jobExists)
                     {
@@ -202,14 +202,14 @@ public class CameraHealthCheckService : BackgroundService
                         var job = new FileDownloadJob
                         {
                             CameraId = camera.Id,
-                            FileName = file.FileName,
+                            FileName = file.Name,
                             FileType = "video",
-                            FileSize = file.FileSize,
-                            DownloadPath = $"downloads/{camera.Id}/{file.FileName}",
+                            FileSize = file.Size,
+                            DownloadPath = $"downloads/{camera.Id}/{file.Name}",
                             Status = "pending",
                             Progress = 0,
-                            FileStartTime = file.StartTime,
-                            FileEndTime = file.StopTime,
+                            FileStartTime = file.Date,
+                            FileEndTime = file.Date.AddSeconds(file.Duration),
                             CreatedAt = DateTime.UtcNow,
                             UpdatedAt = DateTime.UtcNow
                         };

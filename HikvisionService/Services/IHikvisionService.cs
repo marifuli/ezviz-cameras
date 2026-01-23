@@ -1,4 +1,5 @@
 using HikvisionService.Models;
+using HikvisionService.Models.ViewModels;
 using Hik.Api.Data;
 
 namespace HikvisionService.Services;
