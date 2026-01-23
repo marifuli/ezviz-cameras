@@ -1,15 +1,17 @@
-@model HikvisionService.Controllers.StoreViewController.StoreViewModel
+@model HikvisionService.Controllers.StoreController.StoreModel
 @{
-    ViewData["Title"] = "Create Store";
+    ViewData["Title"] = "Edit Store";
 }
 
 <div class="mb-6">
-    <h1 class="text-2xl font-bold">Create Store</h1>
+    <h1 class="text-2xl font-bold">Edit Store</h1>
 </div>
 
 <div class="bg-white shadow-md rounded-lg p-6 max-w-lg">
-    <form asp-action="Create" method="POST">
+    <form asp-action="Edit" method="POST">
         <div asp-validation-summary="ModelOnly" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"></div>
+        
+        <input type="hidden" asp-for="Id" />
         
         <div class="mb-4">
             <label asp-for="Name" class="block text-gray-700 text-sm font-bold mb-2">Store Name</label>
@@ -19,7 +21,7 @@
         
         <div class="flex items-center justify-between">
             <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                Create
+                Save
             </button>
             <a href="@Url.Action("Index")" class="inline-block align-baseline font-bold text-sm text-indigo-600 hover:text-indigo-800">
                 Back to List

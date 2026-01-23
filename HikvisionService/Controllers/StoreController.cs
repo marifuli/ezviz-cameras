@@ -2,12 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using HikvisionService.Data;
 using HikvisionService.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace HikvisionService.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class StoreController : ControllerBase
+public class StoreController : Controller
 {
     private readonly HikvisionDbContext _context;
     private readonly ILogger<StoreController> _logger;
@@ -18,41 +17,28 @@ public class StoreController : ControllerBase
         _logger = logger;
     }
 
-    /// <summary>
-    /// Get all stores
-    /// </summary>
-    [HttpGet]
-    public async Task<IActionResult> GetStores()
+    // GET: /Store
+    public async Task<IActionResult> Index()
     {
         try
         {
             var stores = await _context.Stores
                 .Include(s => s.Cameras)
                 .OrderBy(s => s.Name)
-                .Select(s => new
-                {
-                    s.Id,
-                    s.Name,
-                    s.CreatedAt,
-                    s.UpdatedAt,
-                    CamerasCount = s.Cameras.Count
-                })
                 .ToListAsync();
 
-            return Ok(stores);
+            return View(stores);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting stores");
-            return StatusCode(500, "Internal server error");
+            TempData["ErrorMessage"] = "An error occurred while retrieving stores.";
+            return View(new List<Store>());
         }
     }
 
-    /// <summary>
-    /// Get store by ID
-    /// </summary>
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetStore(long id)
+    // GET: /Store/Details/5
+    public async Task<IActionResult> Details(long id)
     {
         try
         {
@@ -62,94 +48,146 @@ public class StoreController : ControllerBase
 
             if (store == null)
             {
-                return NotFound($"Store with ID {id} not found");
+                TempData["ErrorMessage"] = $"Store with ID {id} not found.";
+                return RedirectToAction(nameof(Index));
             }
 
-            return Ok(store);
+            return View(store);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting store {StoreId}", id);
-            return StatusCode(500, "Internal server error");
+            TempData["ErrorMessage"] = "An error occurred while retrieving the store.";
+            return RedirectToAction(nameof(Index));
         }
     }
 
-    /// <summary>
-    /// Create a new store
-    /// </summary>
-    [HttpPost]
-    public async Task<IActionResult> CreateStore([FromBody] CreateStoreRequest request)
+    // GET: /Store/Create
+    public IActionResult Create()
     {
-        try
-        {
-            // Check if store name already exists
-            if (await _context.Stores.AnyAsync(s => s.Name == request.Name))
-            {
-                return BadRequest("Store name already exists");
-            }
-
-            var store = new Store
-            {
-                Name = request.Name,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            _context.Stores.Add(store);
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("Created store: {StoreName} with ID: {StoreId}", store.Name, store.Id);
-
-            return CreatedAtAction(nameof(GetStore), new { id = store.Id }, store);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating store");
-            return StatusCode(500, "Internal server error");
-        }
+        return View();
     }
 
-    /// <summary>
-    /// Update existing store
-    /// </summary>
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateStore(long id, [FromBody] UpdateStoreRequest request)
+    // POST: /Store/Create
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(StoreModel model)
+    {
+        if (ModelState.IsValid)
+        {
+            try
+            {
+                // Check if store name already exists
+                if (await _context.Stores.AnyAsync(s => s.Name == model.Name))
+                {
+                    ModelState.AddModelError("Name", "Store name already exists");
+                    return View(model);
+                }
+
+                var store = new Store
+                {
+                    Name = model.Name,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _context.Stores.Add(store);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Created store: {StoreName} with ID: {StoreId}", store.Name, store.Id);
+                TempData["SuccessMessage"] = "Store created successfully.";
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating store");
+                ModelState.AddModelError("", "An error occurred while creating the store.");
+            }
+        }
+
+        return View(model);
+    }
+
+    // GET: /Store/Edit/5
+    public async Task<IActionResult> Edit(long id)
     {
         try
         {
             var store = await _context.Stores.FindAsync(id);
             if (store == null)
             {
-                return NotFound($"Store with ID {id} not found");
+                TempData["ErrorMessage"] = $"Store with ID {id} not found.";
+                return RedirectToAction(nameof(Index));
             }
 
-            // Check if new name already exists (excluding current store)
-            if (await _context.Stores.AnyAsync(s => s.Name == request.Name && s.Id != id))
+            var viewModel = new StoreModel
             {
-                return BadRequest("Store name already exists");
-            }
+                Id = store.Id,
+                Name = store.Name
+            };
 
-            store.Name = request.Name;
-            store.UpdatedAt = DateTime.UtcNow;
-
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("Updated store {StoreId}: {StoreName}", store.Id, store.Name);
-
-            return Ok(store);
+            return View(viewModel);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating store {StoreId}", id);
-            return StatusCode(500, "Internal server error");
+            _logger.LogError(ex, "Error getting store {StoreId} for edit", id);
+            TempData["ErrorMessage"] = "An error occurred while retrieving the store.";
+            return RedirectToAction(nameof(Index));
         }
     }
 
-    /// <summary>
-    /// Delete store
-    /// </summary>
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteStore(long id)
+    // POST: /Store/Edit/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(long id, StoreModel model)
+    {
+        if (id != model.Id)
+        {
+            TempData["ErrorMessage"] = "Invalid store ID.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (ModelState.IsValid)
+        {
+            try
+            {
+                var store = await _context.Stores.FindAsync(id);
+                if (store == null)
+                {
+                    TempData["ErrorMessage"] = $"Store with ID {id} not found.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Check if new name already exists (excluding current store)
+                if (await _context.Stores.AnyAsync(s => s.Name == model.Name && s.Id != id))
+                {
+                    ModelState.AddModelError("Name", "Store name already exists");
+                    return View(model);
+                }
+
+                store.Name = model.Name;
+                store.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Updated store {StoreId}: {StoreName}", store.Id, store.Name);
+                TempData["SuccessMessage"] = "Store updated successfully.";
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating store {StoreId}", id);
+                ModelState.AddModelError("", "An error occurred while updating the store.");
+            }
+        }
+
+        return View(model);
+    }
+
+    // GET: /Store/Delete/5
+    public async Task<IActionResult> Delete(long id)
     {
         try
         {
@@ -159,37 +197,67 @@ public class StoreController : ControllerBase
 
             if (store == null)
             {
-                return NotFound($"Store with ID {id} not found");
+                TempData["ErrorMessage"] = $"Store with ID {id} not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(store);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting store {StoreId} for delete", id);
+            TempData["ErrorMessage"] = "An error occurred while retrieving the store.";
+            return RedirectToAction(nameof(Index));
+        }
+    }
+
+    // POST: /Store/Delete/5
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteConfirmed(long id)
+    {
+        try
+        {
+            var store = await _context.Stores
+                .Include(s => s.Cameras)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (store == null)
+            {
+                TempData["ErrorMessage"] = $"Store with ID {id} not found.";
+                return RedirectToAction(nameof(Index));
             }
 
             // Check if store has cameras
             if (store.Cameras.Any())
             {
-                return BadRequest("Cannot delete store with associated cameras. Please delete cameras first.");
+                TempData["ErrorMessage"] = "Cannot delete store with associated cameras. Please delete cameras first.";
+                return RedirectToAction(nameof(Delete), new { id });
             }
 
             _context.Stores.Remove(store);
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("Deleted store {StoreId}: {StoreName}", store.Id, store.Name);
+            TempData["SuccessMessage"] = "Store deleted successfully.";
 
-            return Ok(new { message = "Store deleted successfully" });
+            return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting store {StoreId}", id);
-            return StatusCode(500, "Internal server error");
+            TempData["ErrorMessage"] = "An error occurred while deleting the store.";
+            return RedirectToAction(nameof(Index));
         }
     }
 
-    // Request DTOs
-    public class CreateStoreRequest
+    // View Models
+    public class StoreModel
     {
-        public string Name { get; set; } = string.Empty;
-    }
+        public long Id { get; set; }
 
-    public class UpdateStoreRequest
-    {
+        [Required(ErrorMessage = "Store name is required")]
+        [StringLength(100, ErrorMessage = "Store name cannot be longer than 100 characters")]
         public string Name { get; set; } = string.Empty;
     }
 }

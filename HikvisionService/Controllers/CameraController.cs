@@ -1,235 +1,251 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using HikvisionService.Services;
 using HikvisionService.Data;
 using HikvisionService.Models;
+using HikvisionService.Services;
+using System.ComponentModel.DataAnnotations;
 
 namespace HikvisionService.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class CameraController : ControllerBase
+public class CameraController : Controller
 {
+    private readonly HikvisionDbContext _context;
     private readonly IHikvisionService _hikvisionService;
     private readonly ILogger<CameraController> _logger;
-    private readonly HikvisionDbContext _context;
 
-    public CameraController(IHikvisionService hikvisionService, ILogger<CameraController> logger, HikvisionDbContext context)
+    public CameraController(HikvisionDbContext context, IHikvisionService hikvisionService, ILogger<CameraController> logger)
     {
+        _context = context;
         _hikvisionService = hikvisionService;
         _logger = logger;
-        _context = context;
     }
 
-    /// <summary>
-    /// Get all cameras
-    /// </summary>
-    [HttpGet]
-    public async Task<IActionResult> GetCameras()
+    // GET: /Camera
+    public async Task<IActionResult> Index()
     {
         try
         {
-            var cameras = await _hikvisionService.GetAllCamerasAsync();
-            return Ok(cameras);
+            var cameras = await _context.Cameras
+                .Include(c => c.Store)
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+
+            return View(cameras);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting cameras");
-            return StatusCode(500, "Internal server error");
+            TempData["ErrorMessage"] = "An error occurred while retrieving cameras.";
+            return View(new List<Camera>());
         }
     }
 
-    /// <summary>
-    /// Get camera by ID
-    /// </summary>
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetCamera(long id)
+    // GET: /Camera/Details/5
+    public async Task<IActionResult> Details(long id)
     {
         try
         {
-            var camera = await _hikvisionService.GetCameraByIdAsync(id);
+            var camera = await _context.Cameras
+                .Include(c => c.Store)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
             if (camera == null)
             {
-                return NotFound($"Camera with ID {id} not found");
+                TempData["ErrorMessage"] = $"Camera with ID {id} not found.";
+                return RedirectToAction(nameof(Index));
             }
-            return Ok(camera);
+
+            return View(camera);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting camera {CameraId}", id);
-            return StatusCode(500, "Internal server error");
+            TempData["ErrorMessage"] = "An error occurred while retrieving the camera.";
+            return RedirectToAction(nameof(Index));
         }
     }
 
-    /// <summary>
-    /// Get available files from a camera
-    /// </summary>
-    [HttpGet("{id}/files")]
-    public async Task<IActionResult> GetAvailableFiles(
-        long id,
-        [FromQuery] DateTime? startTime = null,
-        [FromQuery] DateTime? endTime = null,
-        [FromQuery] string fileType = "both")
+    // GET: /Camera/Create
+    public async Task<IActionResult> Create()
     {
-        try
-        {
-            // Set default time range if not provided (last 4 hours)
-            var start = startTime ?? DateTime.Now.AddHours(-4);
-            var end = endTime ?? DateTime.Now;
-
-            // Validate file type
-            if (fileType != "both" && fileType != "video" && fileType != "photo")
-            {
-                return BadRequest("FileType must be 'both', 'video', or 'photo'");
-            }
-
-            var files = await _hikvisionService.GetAvailableFilesAsync(id, start, end, fileType);
-            
-            // Transform files to a more API-friendly format
-            var response = new
-            {
-                CameraId = id,
-                StartTime = start,
-                EndTime = end,
-                FileType = fileType,
-                TotalFiles = files.Count,
-                Files = files.Select(f => new
-                {
-                    Name = f.Name,
-                    Size = f.Size,
-                    Date = f.Date,
-                    Duration = f.Duration, // Duration in seconds for videos
-                    Type = f.Duration > 0 ? "video" : "photo" // Videos have duration, photos don't
-                }).ToList()
-            };
-
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting available files for camera {CameraId}", id);
-            return StatusCode(500, "Internal server error");
-        }
+        await PopulateStoresDropdown();
+        return View();
     }
 
-    /// <summary>
-    /// Test camera connection
-    /// </summary>
-    [HttpPost("{id}/test-connection")]
-    public async Task<IActionResult> TestConnection(long id)
-    {
-        try
-        {
-            var isConnected = await _hikvisionService.TestCameraConnectionAsync(id);
-            return Ok(new { CameraId = id, IsConnected = isConnected });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error testing connection for camera {CameraId}", id);
-            return StatusCode(500, "Internal server error");
-        }
-    }
-
-    /// <summary>
-    /// Create a new camera
-    /// </summary>
+    // POST: /Camera/Create
     [HttpPost]
-    public async Task<IActionResult> CreateCamera([FromBody] CreateCameraRequest request)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(CameraModel model)
     {
-        try
+        if (ModelState.IsValid)
         {
-            // Validate that the store exists
-            var storeExists = await _context.Stores.AnyAsync(s => s.Id == request.StoreId);
-            if (!storeExists)
+            try
             {
-                return BadRequest($"Store with ID {request.StoreId} does not exist");
+                // Validate that the store exists
+                var storeExists = await _context.Stores.AnyAsync(s => s.Id == model.StoreId);
+                if (!storeExists)
+                {
+                    ModelState.AddModelError("StoreId", "Selected store does not exist");
+                    await PopulateStoresDropdown();
+                    return View(model);
+                }
+
+                var camera = new Camera
+                {
+                    StoreId = model.StoreId,
+                    Name = model.Name,
+                    IpAddress = model.IpAddress,
+                    Port = model.Port,
+                    Username = model.Username,
+                    Password = model.Password,
+                    ServerPort = model.ServerPort,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _context.Cameras.Add(camera);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Created camera: {CameraName} with ID: {CameraId}", camera.Name, camera.Id);
+                TempData["SuccessMessage"] = "Camera created successfully.";
+
+                return RedirectToAction(nameof(Index));
             }
-
-            var camera = new Camera
+            catch (Exception ex)
             {
-                StoreId = request.StoreId,
-                Name = request.Name,
-                IpAddress = request.IpAddress,
-                Port = request.Port,
-                Username = request.Username,
-                Password = request.Password,
-                ServerPort = request.ServerPort,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            _context.Cameras.Add(camera);
-            await _context.SaveChangesAsync();
-
-            // Load the store for the response
-            await _context.Entry(camera)
-                .Reference(c => c.Store)
-                .LoadAsync();
-
-            _logger.LogInformation("Created camera: {CameraName} with ID: {CameraId}", camera.Name, camera.Id);
-
-            return CreatedAtAction(nameof(GetCamera), new { id = camera.Id }, camera);
+                _logger.LogError(ex, "Error creating camera");
+                ModelState.AddModelError("", "An error occurred while creating the camera.");
+            }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating camera");
-            return StatusCode(500, "Internal server error");
-        }
+
+        await PopulateStoresDropdown();
+        return View(model);
     }
 
-    /// <summary>
-    /// Update existing camera
-    /// </summary>
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateCamera(long id, [FromBody] UpdateCameraRequest request)
+    // GET: /Camera/Edit/5
+    public async Task<IActionResult> Edit(long id)
     {
         try
         {
             var camera = await _context.Cameras.FindAsync(id);
             if (camera == null)
             {
-                return NotFound($"Camera with ID {id} not found");
+                TempData["ErrorMessage"] = $"Camera with ID {id} not found.";
+                return RedirectToAction(nameof(Index));
             }
 
-            // Validate that the store exists
-            var storeExists = await _context.Stores.AnyAsync(s => s.Id == request.StoreId);
-            if (!storeExists)
+            var viewModel = new CameraModel
             {
-                return BadRequest($"Store with ID {request.StoreId} does not exist");
-            }
+                Id = camera.Id,
+                StoreId = camera.StoreId ?? 0,
+                Name = camera.Name,
+                IpAddress = camera.IpAddress,
+                Port = camera.Port,
+                Username = camera.Username,
+                Password = camera.Password,
+                ServerPort = camera.ServerPort
+            };
 
-            camera.StoreId = request.StoreId;
-            camera.Name = request.Name;
-            camera.IpAddress = request.IpAddress;
-            camera.Port = request.Port;
-            camera.Username = request.Username;
-            camera.Password = request.Password;
-            camera.ServerPort = request.ServerPort;
-            camera.UpdatedAt = DateTime.UtcNow;
-
-            await _context.SaveChangesAsync();
-
-            // Load the store for the response
-            await _context.Entry(camera)
-                .Reference(c => c.Store)
-                .LoadAsync();
-
-            _logger.LogInformation("Updated camera {CameraId}: {CameraName}", camera.Id, camera.Name);
-
-            return Ok(camera);
+            await PopulateStoresDropdown(camera.StoreId);
+            return View(viewModel);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating camera {CameraId}", id);
-            return StatusCode(500, "Internal server error");
+            _logger.LogError(ex, "Error getting camera {CameraId} for edit", id);
+            TempData["ErrorMessage"] = "An error occurred while retrieving the camera.";
+            return RedirectToAction(nameof(Index));
         }
     }
 
-    /// <summary>
-    /// Delete camera
-    /// </summary>
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteCamera(long id)
+    // POST: /Camera/Edit/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(long id, CameraModel model)
+    {
+        if (id != model.Id)
+        {
+            TempData["ErrorMessage"] = "Invalid camera ID.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (ModelState.IsValid)
+        {
+            try
+            {
+                var camera = await _context.Cameras.FindAsync(id);
+                if (camera == null)
+                {
+                    TempData["ErrorMessage"] = $"Camera with ID {id} not found.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Validate that the store exists
+                var storeExists = await _context.Stores.AnyAsync(s => s.Id == model.StoreId);
+                if (!storeExists)
+                {
+                    ModelState.AddModelError("StoreId", "Selected store does not exist");
+                    await PopulateStoresDropdown(camera.StoreId);
+                    return View(model);
+                }
+
+                camera.StoreId = model.StoreId;
+                camera.Name = model.Name;
+                camera.IpAddress = model.IpAddress;
+                camera.Port = model.Port;
+                camera.Username = model.Username;
+                camera.Password = model.Password;
+                camera.ServerPort = model.ServerPort;
+                camera.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Updated camera {CameraId}: {CameraName}", camera.Id, camera.Name);
+                TempData["SuccessMessage"] = "Camera updated successfully.";
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating camera {CameraId}", id);
+                ModelState.AddModelError("", "An error occurred while updating the camera.");
+            }
+        }
+
+        await PopulateStoresDropdown(model.StoreId);
+        return View(model);
+    }
+
+    // GET: /Camera/Delete/5
+    public async Task<IActionResult> Delete(long id)
+    {
+        try
+        {
+            var camera = await _context.Cameras
+                .Include(c => c.Store)
+                .Include(c => c.FileDownloadJobs)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (camera == null)
+            {
+                TempData["ErrorMessage"] = $"Camera with ID {id} not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(camera);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting camera {CameraId} for delete", id);
+            TempData["ErrorMessage"] = "An error occurred while retrieving the camera.";
+            return RedirectToAction(nameof(Index));
+        }
+    }
+
+    // POST: /Camera/Delete/5
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteConfirmed(long id)
     {
         try
         {
@@ -239,7 +255,8 @@ public class CameraController : ControllerBase
 
             if (camera == null)
             {
-                return NotFound($"Camera with ID {id} not found");
+                TempData["ErrorMessage"] = $"Camera with ID {id} not found.";
+                return RedirectToAction(nameof(Index));
             }
 
             // Delete associated download jobs
@@ -252,36 +269,70 @@ public class CameraController : ControllerBase
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("Deleted camera {CameraId}: {CameraName}", camera.Id, camera.Name);
+            TempData["SuccessMessage"] = "Camera deleted successfully.";
 
-            return Ok(new { message = "Camera deleted successfully" });
+            return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting camera {CameraId}", id);
-            return StatusCode(500, "Internal server error");
+            TempData["ErrorMessage"] = "An error occurred while deleting the camera.";
+            return RedirectToAction(nameof(Index));
         }
     }
 
-    // Request DTOs
-    public class CreateCameraRequest
+    // GET: /Camera/TestConnection/5
+    public async Task<IActionResult> TestConnection(long id)
     {
-        public long StoreId { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string IpAddress { get; set; } = string.Empty;
-        public int Port { get; set; } = 554;
-        public string? Username { get; set; }
-        public string? Password { get; set; }
-        public int? ServerPort { get; set; }
+        try
+        {
+            var chList = await _hikvisionService.TestCameraConnectionAsync(id);
+            TempData["SuccessMessage"] = "Camera channels are: <br> " + string.Join(" <br> ", chList);
+            
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error testing connection for camera {CameraId}", id);
+            TempData["ErrorMessage"] = "An error occurred while testing the camera connection.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
     }
 
-    public class UpdateCameraRequest
+    // Helper methods
+    private async Task PopulateStoresDropdown(long? selectedStoreId = null)
     {
+        var stores = await _context.Stores.OrderBy(s => s.Name).ToListAsync();
+        ViewBag.Stores = new SelectList(stores, "Id", "Name", selectedStoreId);
+    }
+
+    // View Models
+    public class CameraModel
+    {
+        public long Id { get; set; }
+
+        [Required(ErrorMessage = "Store is required")]
+        [Display(Name = "Store")]
         public long StoreId { get; set; }
+
+        [Required(ErrorMessage = "Camera name is required")]
+        [StringLength(100, ErrorMessage = "Camera name cannot be longer than 100 characters")]
         public string Name { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "IP address is required")]
+        [Display(Name = "IP Address")]
         public string IpAddress { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Port is required")]
+        [Range(1, 65535, ErrorMessage = "Port must be between 1 and 65535")]
         public int Port { get; set; } = 554;
+
         public string? Username { get; set; }
+
         public string? Password { get; set; }
+
+        [Display(Name = "Server Port")]
+        [Range(1, 65535, ErrorMessage = "Server port must be between 1 and 65535")]
         public int? ServerPort { get; set; }
     }
 }

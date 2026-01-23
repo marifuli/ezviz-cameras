@@ -48,7 +48,7 @@ builder.Services.AddSession(options =>
 
 // Configure SQLite database connection to shared Laravel database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Data Source=../laravel/database/database.sqlite";
+    ?? "Data Source=./database.sqlite";
 
 builder.Services.AddDbContext<HikvisionDbContext>(options =>
     options.UseSqlite(connectionString));

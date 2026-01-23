@@ -20,32 +20,22 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index(long[]? stores = null)
     {
-        try
+        var allStores = await _context.Stores.OrderBy(s => s.Name).ToListAsync();
+        var selectedStoreIds = stores?.ToList() ?? allStores.Select(s => s.Id).ToList();
+        var cameras = await _context.Cameras
+            .Include(c => c.Store)
+            .Where(c => selectedStoreIds.Contains(c.StoreId ?? 0))
+            .OrderBy(c => c.Name)
+            .ToListAsync();
+
+        var viewModel = new DashboardViewModel
         {
-            var allStores = await _context.Stores.OrderBy(s => s.Name).ToListAsync();
+            Stores = allStores,
+            SelectedStoreIds = selectedStoreIds,
+            Cameras = cameras
+        };
 
-            var selectedStoreIds = stores?.ToList() ?? allStores.Select(s => s.Id).ToList();
-            
-            var cameras = await _context.Cameras
-                .Include(c => c.Store)
-                .Where(c => selectedStoreIds.Contains(c.StoreId ?? 0))
-                .OrderBy(c => c.Name)
-                .ToListAsync();
-
-            var viewModel = new DashboardViewModel
-            {
-                Stores = allStores,
-                SelectedStoreIds = selectedStoreIds,
-                Cameras = cameras
-            };
-
-            return View(viewModel);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error loading dashboard");
-            return View("Error");
-        }
+        return View(viewModel);
     }
 
     [AllowAnonymous]

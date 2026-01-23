@@ -1,4 +1,8 @@
 
+
+# Run Dotnet Web service 
+dotnet run --project=HikvisionService
+
 # Cams
 Godown 138.252.14.100 8001-8004
 
