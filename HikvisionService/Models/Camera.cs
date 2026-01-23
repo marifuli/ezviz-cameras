@@ -31,6 +31,15 @@ public class Camera
     [Column("server_port")]
     public int? ServerPort { get; set; }
 
+    [Column("is_online")]
+    public bool IsOnline { get; set; } = false;
+
+    [Column("last_online_at")]
+    public DateTime? LastOnlineAt { get; set; }
+
+    [Column("last_downloaded_at")]
+    public DateTime? LastDownloadedAt { get; set; }
+
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
 

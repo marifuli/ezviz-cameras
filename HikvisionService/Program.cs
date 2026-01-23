@@ -27,6 +27,9 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Configure background service intervals
+builder.Services.Configure<BackgroundServiceOptions>(builder.Configuration.GetSection("BackgroundServices"));
+
 // Add Authentication
 builder.Services.AddAuthentication("Cookies")
     .AddCookie("Cookies", options =>
@@ -55,6 +58,11 @@ builder.Services.AddDbContext<HikvisionDbContext>(options =>
 
 // Register services
 builder.Services.AddScoped<IHikvisionService, HikvisionService.Services.HikvisionService>();
+
+// Register background services
+builder.Services.AddHostedService<CameraHealthCheckService>();
+builder.Services.AddHostedService<StorageMonitoringService>();
+builder.Services.AddHostedService<DownloadJobService>();
 
 // Configure CORS for Laravel integration
 builder.Services.AddCors(options =>
@@ -96,19 +104,22 @@ app.MapControllerRoute(
 // API routing
 app.MapControllers();
 
-// Ensure database is created (for file_download_jobs table if it doesn't exist)
+// Ensure database is created and apply migrations
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<HikvisionDbContext>();
     try
     {
-        // Only create tables that don't exist (file_download_jobs)
+        // Ensure database exists
         context.Database.EnsureCreated();
         Log.Information("Database tables ensured");
+        
+        // Apply migrations
+        MigrationRunner.ApplyMigrations(app.Services);
     }
     catch (Exception ex)
     {
-        Log.Error(ex, "Error ensuring database tables");
+        Log.Error(ex, "Error ensuring database tables or applying migrations");
     }
 }
 

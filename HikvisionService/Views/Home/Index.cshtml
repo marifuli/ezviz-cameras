@@ -1,74 +1,430 @@
-@model HikvisionService.Controllers.HomeController.DashboardViewModel
+@model HikvisionService.Models.ViewModels.DashboardViewModel
 @{
-    ViewData["Title"] = "Live Camera Feeds";
-    Layout = "_Layout";
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="p-4">
-    <h1 class="text-4xl font-bold text-gray-900 mb-4">Live Camera Feeds</h1>
-
-    @foreach(var recording in Model.Recordings)
-    {
-        <h6>@recording.Name</h6>
-        <h6>@recording.Duration</h6>
-        <h6>@recording.Size</h6>
-    }
-
-    @if (Model.Cameras.Any())
-    {
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-            @foreach(var camera in Model.Cameras)
-            {
-                <div class="relative bg-gray-100 rounded-lg overflow-hidden shadow-lg">
-                    <div class="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm z-10">
-                        @camera.Name
+<div class="container-fluid">
+    <h1 class="mt-4">Camera Monitoring Dashboard</h1>
+    
+    <!-- System Summary Cards -->
+    <div class="row mt-4">
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Cameras</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalCameras</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-camera fa-2x text-gray-300"></i>
+                        </div>
                     </div>
-                    <video id="video-@camera.Id" class="w-full h-48 object-cover" controls autoplay muted></video>
                 </div>
-            }
+            </div>
         </div>
-    }
-    else
-    {
-        <p class="text-gray-600">No cameras found for the selected stores.</p>
-    }
+
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Online Cameras</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.OnlineCameras</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Offline Cameras</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.OfflineCameras</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-times-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Active Downloads</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.ActiveDownloadJobs</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-download fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Failed Downloads</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.FailedDownloadJobs</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-secondary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
+                                Actions</div>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-sm btn-primary" id="checkAllCameras">
+                                    <i class="fas fa-sync"></i> Check All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <!-- Offline Cameras List -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Offline Cameras</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.OfflineCamerasList.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Camera</th>
+                                        <th>Last Online</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var camera in Model.OfflineCamerasList)
+                                    {
+                                        <tr>
+                                            <td>@camera.Name</td>
+                                            <td>
+                                                @if (camera.LastOnlineAt.HasValue)
+                                                {
+                                                    <span title="@camera.LastOnlineAt">
+                                                        @camera.LastOnlineAt.Value.ToString("yyyy-MM-dd HH:mm")
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span>Never</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-primary check-camera" data-id="@camera.Id">
+                                                    <i class="fas fa-sync"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center">
+                            <p class="text-success">All cameras are online!</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Storage Usage Panel -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Storage Usage</h6>
+                    <div class="dropdown no-arrow">
+                        <button class="btn btn-sm btn-primary" id="checkStorage">
+                            <i class="fas fa-sync"></i> Check Storage
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (Model.StorageDrives.Any())
+                    {
+                        foreach (var drive in Model.StorageDrives)
+                        {
+                            <div class="mb-4">
+                                <h4 class="small font-weight-bold">
+                                    @drive.Name (@drive.RootPath)
+                                    <span class="float-right">
+                                        @(drive.UsagePercentage.ToString("F1"))%
+                                    </span>
+                                </h4>
+                                <div class="progress mb-2">
+                                    @{
+                                        string progressClass = "bg-success";
+                                        if (drive.UsagePercentage >= 95)
+                                        {
+                                            progressClass = "bg-danger";
+                                        }
+                                        else if (drive.UsagePercentage >= 85)
+                                        {
+                                            progressClass = "bg-warning";
+                                        }
+                                        else if (drive.UsagePercentage >= 70)
+                                        {
+                                            progressClass = "bg-info";
+                                        }
+                                    }
+                                    <div class="progress-bar @progressClass" role="progressbar" style="width: @(drive.UsagePercentage)%"
+                                         aria-valuenow="@(drive.UsagePercentage)" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div class="small">
+                                    <span class="mr-2">
+                                        <i class="fas fa-circle text-primary"></i> Used: @FormatBytes(drive.UsedSpace)
+                                    </span>
+                                    <span class="mr-2">
+                                        <i class="fas fa-circle text-success"></i> Free: @FormatBytes(drive.FreeSpace)
+                                    </span>
+                                    <span class="mr-2">
+                                        <i class="fas fa-circle text-info"></i> Total: @FormatBytes(drive.TotalSpace)
+                                    </span>
+                                    <span class="float-right text-xs">
+                                        Last checked: @drive.LastCheckedAt.ToString("yyyy-MM-dd HH:mm:ss")
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center">
+                            <p>No storage drives configured.</p>
+                            <a href="/Store/Create" class="btn btn-primary">Add Storage Drive</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Downloads -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Active Downloads</h6>
+                </div>
+                <div class="card-body">
+                    <div id="activeDownloads">
+                        <p class="text-center">Loading active downloads...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script>
         $(document).ready(function() {
-            $('#stores').select2({
-                placeholder: 'Select stores',
-                allowClear: true
-            });
-        });
-    </script>
-    <script>
-        let host = "localhost", // You can make this configurable
-            username = "admin", // You can make this configurable
-            password = "admin", // You can make this configurable 
-            local = window.location.origin.includes('localhost') ? 'http' : 'https',
-            cameras = @Html.Raw(Json.Serialize(Model.Cameras.Select(c => new { Id = c.Id, Name = c.Name })));
-
-        cameras.forEach(camera => {
-            const video = document.getElementById('video-' + camera.id);
-            const videoSrc = local + `://${host}:8888/cam${camera.id}/index.m3u8`;
-
-            if (Hls.isSupported()) {
-                const hls = new Hls({
-                    xhrSetup: function (xhr, url) {
-                        const credentials = btoa(`${username}:${password}`);
-                        xhr.setRequestHeader("Authorization", `Basic ${credentials}`);
+            // Check camera connection
+            $('.check-camera').click(function() {
+                const cameraId = $(this).data('id');
+                const button = $(this);
+                
+                button.prop('disabled', true);
+                button.html('<i class="fas fa-spinner fa-spin"></i>');
+                
+                $.ajax({
+                    url: `/api/cameras/${cameraId}/check`,
+                    type: 'POST',
+                    success: function(result) {
+                        if (result.isOnline) {
+                            toastr.success('Camera is online!');
+                            // Reload page after a short delay
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            toastr.error('Camera is offline.');
+                            button.prop('disabled', false);
+                            button.html('<i class="fas fa-sync"></i>');
+                        }
                     },
+                    error: function() {
+                        toastr.error('Failed to check camera connection.');
+                        button.prop('disabled', false);
+                        button.html('<i class="fas fa-sync"></i>');
+                    }
                 });
-                hls.on(Hls.Events.MEDIA_ATTACHED, () => {
-                    hls.loadSource(videoSrc);
+            });
+            
+            // Check all cameras
+            $('#checkAllCameras').click(function() {
+                const button = $(this);
+                
+                button.prop('disabled', true);
+                button.html('<i class="fas fa-spinner fa-spin"></i> Checking...');
+                
+                $.ajax({
+                    url: '/api/cameras/check-all',
+                    type: 'POST',
+                    success: function() {
+                        toastr.success('Camera health check triggered.');
+                        // Reload page after a short delay
+                        setTimeout(function() {
+                            location.reload();
+                        }, 3000);
+                    },
+                    error: function() {
+                        toastr.error('Failed to trigger camera health check.');
+                        button.prop('disabled', false);
+                        button.html('<i class="fas fa-sync"></i> Check All');
+                    }
                 });
-                hls.attachMedia(video);
-            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                video.src = videoSrc;
+            });
+            
+            // Check storage
+            $('#checkStorage').click(function() {
+                const button = $(this);
+                
+                button.prop('disabled', true);
+                button.html('<i class="fas fa-spinner fa-spin"></i> Checking...');
+                
+                $.ajax({
+                    url: '/api/storage-drives/check',
+                    type: 'POST',
+                    success: function() {
+                        toastr.success('Storage check triggered.');
+                        // Reload page after a short delay
+                        setTimeout(function() {
+                            location.reload();
+                        }, 3000);
+                    },
+                    error: function() {
+                        toastr.error('Failed to trigger storage check.');
+                        button.prop('disabled', false);
+                        button.html('<i class="fas fa-sync"></i> Check Storage');
+                    }
+                });
+            });
+            
+            // Load active downloads
+            function loadActiveDownloads() {
+                $.ajax({
+                    url: '/api/download-jobs/active',
+                    type: 'GET',
+                    success: function(jobs) {
+                        if (jobs.length === 0) {
+                            $('#activeDownloads').html('<p class="text-center">No active downloads.</p>');
+                            return;
+                        }
+                        
+                        let html = '<div class="table-responsive">';
+                        html += '<table class="table table-bordered" width="100%" cellspacing="0">';
+                        html += '<thead><tr><th>Camera</th><th>File</th><th>Progress</th><th>Started</th><th>Action</th></tr></thead>';
+                        html += '<tbody>';
+                        
+                        jobs.forEach(function(job) {
+                            html += '<tr>';
+                            html += `<td>${job.camera.name}</td>`;
+                            html += `<td>${job.fileName}</td>`;
+                            html += '<td>';
+                            html += `<div class="progress">`;
+                            html += `<div class="progress-bar" role="progressbar" style="width: ${job.progress}%" `;
+                            html += `aria-valuenow="${job.progress}" aria-valuemin="0" aria-valuemax="100">${job.progress}%</div>`;
+                            html += '</div>';
+                            html += '</td>';
+                            html += `<td>${new Date(job.startTime).toLocaleString()}</td>`;
+                            html += `<td><button class="btn btn-sm btn-danger cancel-job" data-id="${job.id}">Cancel</button></td>`;
+                            html += '</tr>';
+                        });
+                        
+                        html += '</tbody></table></div>';
+                        $('#activeDownloads').html(html);
+                        
+                        // Attach event handlers to cancel buttons
+                        $('.cancel-job').click(function() {
+                            const jobId = $(this).data('id');
+                            cancelJob(jobId);
+                        });
+                    },
+                    error: function() {
+                        $('#activeDownloads').html('<p class="text-center text-danger">Failed to load active downloads.</p>');
+                    }
+                });
             }
+            
+            function cancelJob(jobId) {
+                $.ajax({
+                    url: `/api/download-jobs/${jobId}/cancel`,
+                    type: 'POST',
+                    success: function() {
+                        toastr.success('Download job cancelled.');
+                        loadActiveDownloads();
+                    },
+                    error: function() {
+                        toastr.error('Failed to cancel download job.');
+                    }
+                });
+            }
+            
+            // Initial load
+            loadActiveDownloads();
+            
+            // Refresh active downloads every 5 seconds
+            setInterval(loadActiveDownloads, 5000);
         });
     </script>
+}
+
+@functions {
+    public string FormatBytes(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        int order = 0;
+        double size = bytes;
+        
+        while (size >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            size = size / 1024;
+        }
+        
+        return $"{size:0.##} {sizes[order]}";
+    }
 }

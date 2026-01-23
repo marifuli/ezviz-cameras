@@ -13,6 +13,7 @@ public class HikvisionDbContext : DbContext
     public DbSet<Store> Stores { get; set; } = null!;
     public DbSet<FileDownloadJob> FileDownloadJobs { get; set; } = null!;
     public DbSet<User> Users { get; set; } = null!;
+    public DbSet<StorageDrive> StorageDrives { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

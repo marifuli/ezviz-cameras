@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using HikvisionService.Data;
 using HikvisionService.Models;
+using HikvisionService.Models.ViewModels;
 using Hik.Api.Data;
 using HikvisionService.Services;
 
@@ -22,36 +23,18 @@ public class HomeController : Controller
         _hikvisionService = hikvisionService;
     }
 
-    public async Task<IActionResult> Index(long[]? stores = null)
+    public async Task<IActionResult> Index()
     {
-        var allStores = await _context.Stores.OrderBy(s => s.Name).ToListAsync();
-        var selectedStoreIds = stores?.ToList() ?? allStores.Select(s => s.Id).ToList();
-        var cameras = await _context.Cameras
-            .Include(c => c.Store)
-            // .Where(c => selectedStoreIds.Contains(c.StoreId ?? 0))
-            .OrderBy(c => c.Name)
-            .ToListAsync();
-
-        var recordings = new List<HikRemoteFile>();
-
-        // foreach (var camera in cameras)
-        // {
-        //     var recording = await _hikvisionService.GetAvailableFilesAsync(
-        //         camera.Id, DateTime.Now.AddDays(-1), 
-        //         DateTime.Now
-        //     );
-        //     recordings.AddRange(recording);
-        // }
-
-        var viewModel = new DashboardViewModel
+        try
         {
-            Stores = allStores,
-            SelectedStoreIds = selectedStoreIds,
-            Cameras = cameras,
-            Recordings = recordings
-        };
-
-        return View(viewModel);
+            var dashboardData = await _hikvisionService.GetDashboardDataAsync();
+            return View(dashboardData);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error loading dashboard data");
+            return View(new Models.ViewModels.DashboardViewModel());
+        }
     }
 
     [AllowAnonymous]
@@ -64,13 +47,5 @@ public class HomeController : Controller
     public IActionResult Error()
     {
         return View();
-    }
-
-    public class DashboardViewModel
-    {
-        public List<Store> Stores { get; set; } = new();
-        public List<long> SelectedStoreIds { get; set; } = new();
-        public List<Camera> Cameras { get; set; } = new();
-        public List<HikRemoteFile> Recordings { get; set; } = new();
     }
 }
