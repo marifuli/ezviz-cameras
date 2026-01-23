@@ -113,8 +113,12 @@ public class HikvisionService : IHikvisionService
             var hikApi = HikApi.Login(camera.IpAddress, camera.Port, camera.Username ?? "admin", camera.Password ?? "");
             
             // Try to get camera time to test connection
-            var cameraTime = hikApi.ConfigService.GetTime();
-            _logger.LogInformation("Camera {CameraName} connection test successful. Camera time: {CameraTime}", camera.Name, cameraTime);
+            // var cameraTime = hikApi.ConfigService.GetTime();
+            _logger.LogInformation("Camera {CameraName} connection test successful. Camera time: {Password}", camera.Name, camera.Password);
+            foreach (var channel in hikApi.IpChannels)
+            {
+                Console.WriteLine($"{channel.Name} {channel.ChannelNumber}; IsOnline : {channel.IsOnline};");
+            }
             
             hikApi.Logout();
             HikApi.Cleanup();
