@@ -20,9 +20,10 @@ public class HikvisionService : IHikvisionService
     public async Task<List<HikRemoteFile>> GetAvailableFilesAsync(long cameraId, DateTime startTime, DateTime endTime, string fileType = "both")
     {
         var camera = await GetCameraByIdAsync(cameraId);
+        _logger.LogWarning("GetAvailableFilesAsync: Camera with ID not found", cameraId);
         if (camera == null)
         {
-            _logger.LogWarning("Camera with ID {CameraId} not found", cameraId);
+            _logger.LogWarning("GetAvailableFilesAsync: Camera with ID {CameraId} not found", cameraId);
             return new List<HikRemoteFile>();
         }
 
@@ -45,7 +46,7 @@ public class HikvisionService : IHikvisionService
 
             // Login to the camera
             var hikApi = HikApi.Login(camera.IpAddress, camera.Port, camera.Username ?? "admin", camera.Password ?? "");
-            _logger.LogInformation("Successfully connected to camera {CameraName} at {IpAddress}:{Port}", camera.Name, camera.IpAddress, camera.Port);
+            _logger.LogInformation("GetAvailableFilesAsync: Successfully connected to camera {CameraName} at {IpAddress}:{Port}", camera.Name, camera.IpAddress, camera.Port);
 
             try
             {
@@ -58,7 +59,7 @@ public class HikvisionService : IHikvisionService
                         {
                             var videos = await hikApi.VideoService.FindFilesAsync(startTime, endTime, channel.ChannelNumber);
                             files.AddRange(videos);
-                            _logger.LogInformation("Found {VideoCount} videos for channel {ChannelNumber}", videos.Count, channel.ChannelNumber);
+                            _logger.LogInformation("GetAvailableFilesAsync: Found {VideoCount} videos for channel {ChannelNumber}", videos.Count, channel.ChannelNumber);
                         }
 
                         if (fileType is "both" or "photo")
@@ -68,11 +69,11 @@ public class HikvisionService : IHikvisionService
                             {
                                 var photos = await hikApi.PhotoService.FindFilesAsync(startTime, endTime);
                                 files.AddRange(photos);
-                                _logger.LogInformation("Found {PhotoCount} photos for channel {ChannelNumber}", photos.Count, channel.ChannelNumber);
+                                _logger.LogInformation("GetAvailableFilesAsync: Found {PhotoCount} photos for channel {ChannelNumber}", photos.Count, channel.ChannelNumber);
                             }
                             catch (Exception ex)
                             {
-                                _logger.LogWarning(ex, "Failed to get photos from channel {ChannelNumber}", channel.ChannelNumber);
+                                _logger.LogWarning(ex, "GetAvailableFilesAsync: Failed to get photos from channel {ChannelNumber}", channel.ChannelNumber);
                             }
                         }
                     }
@@ -84,14 +85,14 @@ public class HikvisionService : IHikvisionService
                     {
                         var videos = await hikApi.VideoService.FindFilesAsync(startTime, endTime);
                         files.AddRange(videos);
-                        _logger.LogInformation("Found {VideoCount} videos from camera", videos.Count);
+                        _logger.LogInformation("GetAvailableFilesAsync: Found {VideoCount} videos from camera", videos.Count);
                     }
 
                     if (fileType is "both" or "photo")
                     {
                         var photos = await hikApi.PhotoService.FindFilesAsync(startTime, endTime);
                         files.AddRange(photos);
-                        _logger.LogInformation("Found {PhotoCount} photos from camera", photos.Count);
+                        _logger.LogInformation("GetAvailableFilesAsync: Found {PhotoCount} photos from camera", photos.Count);
                     }
                 }
             }
@@ -103,7 +104,7 @@ public class HikvisionService : IHikvisionService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get files from camera {CameraId}: {ErrorMessage}", cameraId, ex.Message);
+            _logger.LogError(ex, "GetAvailableFilesAsync: Failed to get files from camera {CameraId}: {ErrorMessage}", cameraId, ex.Message);
         }
         finally
         {
@@ -114,7 +115,7 @@ public class HikvisionService : IHikvisionService
             }
             catch (Exception cleanupEx)
             {
-                _logger.LogWarning(cleanupEx, "Failed to clean up Hikvision SDK resources");
+                _logger.LogWarning(cleanupEx, "GetAvailableFilesAsync: Failed to clean up Hikvision SDK resources");
             }
         }
 

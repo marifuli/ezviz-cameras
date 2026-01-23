@@ -7,30 +7,12 @@
 <div class="p-4">
     <h1 class="text-4xl font-bold text-gray-900 mb-4">Live Camera Feeds</h1>
 
-    <form method="GET" asp-action="Index" class="mb-8 flex">
-        <div style="width: 100%" class="ml-2">
-            <label for="stores" class="block text-sm font-medium text-gray-700 mb-2">Select Stores:</label>
-            <select name="stores" id="stores" multiple class="block w-full" required>
-                @foreach(var store in Model.Stores)
-                {
-                    @if (Model.SelectedStoreIds.Contains(store.Id))
-                    {
-                        <option value="@store.Id" selected>@store.Name</option>
-                    }
-                    else
-                    {
-                        <option value="@store.Id">@store.Name</option>
-                    }
-                }
-            </select>
-        </div>
-        <div style="width: 100px">
-            <label for="">&nbsp;</label>
-            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
-                Submit
-            </button>
-        </div>
-    </form>
+    @foreach(var recording in Model.Recordings)
+    {
+        <h6>@recording.Name</h6>
+        <h6>@recording.Duration</h6>
+        <h6>@recording.Size</h6>
+    }
 
     @if (Model.Cameras.Any())
     {
