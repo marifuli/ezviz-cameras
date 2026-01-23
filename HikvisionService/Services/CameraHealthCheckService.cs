@@ -104,7 +104,7 @@ public class CameraHealthCheckService : BackgroundService
             // Initialize with proper logging and force reinitialization
             HikApi.Initialize(
                 logLevel: 3, 
-                logDirectory: "HikvisionSDKLogs", 
+                logDirectory: "logs", 
                 autoDeleteLogs: true,
                 waitTimeMilliseconds: 5000,
                 forceReinitialization: true

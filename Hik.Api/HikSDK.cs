@@ -26,7 +26,7 @@ namespace Hik.Api
         /// <param name="tryTimes">The try times.</param>
         /// <param name="reconnectInterval">The reconnect interval.</param>
         /// <param name="enableReconnect">if set to <c>true</c> [enable reconnect].</param>
-        public void Initialize(int logLevel = 3, string logDirectory = "HikvisionSDKLogs", bool autoDeleteLogs = true, uint waitTimeMilliseconds = 2000, uint tryTimes = 1, uint reconnectInterval = 10000, bool enableReconnect = true)
+        public void Initialize(int logLevel = 3, string logDirectory = "logs", bool autoDeleteLogs = true, uint waitTimeMilliseconds = 2000, uint tryTimes = 1, uint reconnectInterval = 10000, bool enableReconnect = true)
         {
             HikApi.Initialize();
         }

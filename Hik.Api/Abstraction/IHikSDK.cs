@@ -15,7 +15,7 @@
         /// <param name="tryTimes">The try times.</param>
         /// <param name="reconnectInterval">The reconnect interval.</param>
         /// <param name="enableReconnect">if set to <c>true</c> [enable reconnect].</param>
-        void Initialize(int logLevel = 3, string logDirectory = "HikvisionSDKLogs", bool autoDeleteLogs = true, uint waitTimeMilliseconds = 2000, uint tryTimes = 1, uint reconnectInterval = 10000, bool enableReconnect = true);
+        void Initialize(int logLevel = 3, string logDirectory = "logs", bool autoDeleteLogs = true, uint waitTimeMilliseconds = 2000, uint tryTimes = 1, uint reconnectInterval = 10000, bool enableReconnect = true);
 
         /// <summary>
         /// Logins the specified ip address.

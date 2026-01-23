@@ -127,7 +127,7 @@ namespace Hik.Api
         /// <param name="forceReinitialization">Force reinitialization even if already initialized</param>
         /// <returns>TRUE means success, FALSE means failure. </returns>
         /// <remarks>This API is used to initialize SDK. Please call this API before calling any other API</remarks>
-        public static void Initialize(int logLevel = 3, string logDirectory = "HikvisionSDKLogs", bool autoDeleteLogs = true, uint waitTimeMilliseconds = 2000, uint tryTimes = 1, uint reconnectInterval = 10000, bool enableReconnect = true, bool forceReinitialization = false)
+        public static void Initialize(int logLevel = 3, string logDirectory = "logs", bool autoDeleteLogs = true, uint waitTimeMilliseconds = 2000, uint tryTimes = 1, uint reconnectInterval = 10000, bool enableReconnect = true, bool forceReinitialization = false)
         {
             if (initialized == false || forceReinitialization)
             {

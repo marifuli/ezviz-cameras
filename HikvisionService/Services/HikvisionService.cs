@@ -43,7 +43,7 @@ public class HikvisionService : IHikvisionService
             // Initialize with proper logging and force reinitialization
             HikApi.Initialize(
                 logLevel: 3, 
-                logDirectory: "HikvisionSDKLogs", 
+                logDirectory: "logs", 
                 autoDeleteLogs: true,
                 waitTimeMilliseconds: 5000, // Increase timeout for better reliability
                 forceReinitialization: true // Force reinitialization to ensure clean state
@@ -146,7 +146,7 @@ public class HikvisionService : IHikvisionService
             // Initialize with proper logging and force reinitialization
             HikApi.Initialize(
                 logLevel: 3, 
-                logDirectory: "HikvisionSDKLogs", 
+                logDirectory: "logs", 
                 autoDeleteLogs: true,
                 waitTimeMilliseconds: 5000, // Increase timeout for better reliability
                 forceReinitialization: true // Force reinitialization to ensure clean state
@@ -217,7 +217,7 @@ public class HikvisionService : IHikvisionService
             // Initialize with proper logging and force reinitialization
             HikApi.Initialize(
                 logLevel: 3,
-                logDirectory: "HikvisionSDKLogs",
+                logDirectory: "logs",
                 autoDeleteLogs: true,
                 waitTimeMilliseconds: 5000,
                 forceReinitialization: true
