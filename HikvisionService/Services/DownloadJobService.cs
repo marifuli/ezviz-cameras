@@ -233,8 +233,16 @@ public class DownloadJobService : BackgroundService
             finally
             {
                 // Always logout when done with the camera
-                hikApi.Logout();
-                HikApi.Cleanup();
+                try
+                {
+                    hikApi.Logout();
+                    HikApi.Cleanup();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error during camera logout or SDK cleanup");
+                    // Continue with the process despite cleanup errors
+                }
             }
         }
         catch (OperationCanceledException)
