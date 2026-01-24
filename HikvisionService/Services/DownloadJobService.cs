@@ -30,7 +30,7 @@ public class DownloadJobService : BackgroundService
         _checkInterval = TimeSpan.FromSeconds(intervalSeconds);
         
         // Get max concurrent downloads from configuration, default to 2
-        _maxConcurrentDownloads = configuration.GetValue<int>("DownloadJob:MaxConcurrentDownloads", 2);
+        _maxConcurrentDownloads = configuration.GetValue<int>("DownloadJob:MaxConcurrentDownloads", 140);
         _downloadSemaphore = new SemaphoreSlim(_maxConcurrentDownloads, _maxConcurrentDownloads);
     }
 
@@ -210,7 +210,7 @@ public class DownloadJobService : BackgroundService
                 }
 
                 // Simulate download with progress reporting
-                await SimulateDownloadAsync(fileToDownload, tempFilePath, progress => UpdateDownloadProgress(job.Id, progress, dbContext));
+                await SimulateDownloadAsync(hikApi, fileToDownload, tempFilePath, progress => UpdateDownloadProgress(job.Id, progress, dbContext));
 
                 // Move the temp file to the final location (atomic operation)
                 File.Move(tempFilePath, finalFilePath, true);
@@ -342,24 +342,25 @@ public class DownloadJobService : BackgroundService
         _logger.LogInformation("Job {JobId} has been cancelled", jobId);
     }
     
-    private async Task SimulateDownloadAsync(HikRemoteFile file, string outputPath, Action<int> progressCallback)
+    private async Task SimulateDownloadAsync(HikApi hikApi, HikRemoteFile file, string outputPath, Action<int> progressCallback)
     {
-        // This is a simplified implementation since we don't have direct access to the API's download method
-        // In a real implementation, you would use the Hik.Api to download the file with progress reporting
-        
-        // Simulate download with progress updates
-        for (int progress = 0; progress <= 100; progress += 10)
+        var destinationPath = outputPath;
+        var downloadId = hikApi.VideoService.StartDownloadFile(file.Name, destinationPath);
+        do
         {
-            progressCallback(progress);
-            await Task.Delay(500); // Simulate download time
+            await Task.Delay(5000);
+            int downloadProgress = hikApi.VideoService.GetDownloadPosition(downloadId);
+            progressCallback(downloadProgress)
+            if (downloadProgress == 100)
+            {
+                hikApi.VideoService.StopDownloadFile(downloadId);
+                break;
+            }
+            else if (downloadProgress < 0 || downloadProgress > 100)
+            {
+                throw new InvalidOperationException($"UpdateDownloadProgress failed, progress value = {downloadProgress}");
+            }
         }
-        
-        // Create an empty file to simulate the download
-        using (var fs = File.Create(outputPath))
-        {
-            // In a real implementation, this would contain the actual file data
-            byte[] content = new byte[1024];
-            await fs.WriteAsync(content, 0, content.Length);
-        }
+        while (true);
     }
 }
