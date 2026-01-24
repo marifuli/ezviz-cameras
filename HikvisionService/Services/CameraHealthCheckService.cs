@@ -153,9 +153,9 @@ public class CameraHealthCheckService : BackgroundService
     {
         try
         {
-            // Get the last 24 hours of footage if LastDownloadedAt is null
+            // Get the last 30 days of footage if LastDownloadedAt is null
             // Otherwise, get footage since the last download
-            DateTime startTime = camera.LastDownloadedAt?.AddMinutes(-5) ?? DateTime.UtcNow.AddHours(-24);
+            DateTime startTime = camera.LastDownloadedAt?.AddMinutes(-5) ?? DateTime.UtcNow.AddHours(-720);
             DateTime endTime = DateTime.UtcNow;
 
             var files = new List<Hik.Api.Data.HikRemoteFile>();
