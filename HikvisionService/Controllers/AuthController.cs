@@ -81,65 +81,66 @@ public class AuthController : Controller
     [HttpGet]
     public IActionResult Register()
     {
-        if (HttpContext.User.Identity?.IsAuthenticated == true)
-        {
-            return RedirectToAction("Index", "Home");
-        }
+        // if (HttpContext.User.Identity?.IsAuthenticated == true)
+        // {
+        // }
+        return RedirectToAction("Index", "Home");
         return View();
     }
 
     [HttpPost]
     public async Task<IActionResult> Register(RegisterViewModel model)
     {
-        if (!ModelState.IsValid)
-        {
-            return View(model);
-        }
+        return RedirectToAction("Index", "Home");
+        // if (!ModelState.IsValid)
+        // {
+        //     return View(model);
+        // }
 
-        try
-        {
-            // Check if user already exists
-            var existingUser = await _context.Users
-                .AnyAsync(u => u.Email == model.Email);
+        // try
+        // {
+        //     // Check if user already exists
+        //     var existingUser = await _context.Users
+        //         .AnyAsync(u => u.Email == model.Email);
 
-            if (existingUser)
-            {
-                ModelState.AddModelError("Email", "A user with this email already exists.");
-                return View(model);
-            }
+        //     if (existingUser)
+        //     {
+        //         ModelState.AddModelError("Email", "A user with this email already exists.");
+        //         return View(model);
+        //     }
 
-            var user = new User
-            {
-                Name = model.Name,
-                Email = model.Email,
-                Password = HashPassword(model.Password),
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+        //     var user = new User
+        //     {
+        //         Name = model.Name,
+        //         Email = model.Email,
+        //         Password = HashPassword(model.Password),
+        //         CreatedAt = DateTime.UtcNow,
+        //         UpdatedAt = DateTime.UtcNow
+        //     };
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+        //     _context.Users.Add(user);
+        //     await _context.SaveChangesAsync();
 
-            // Sign in the user after registration
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Name),
-                new Claim(ClaimTypes.Email, user.Email)
-            };
+        //     // Sign in the user after registration
+        //     var claims = new List<Claim>
+        //     {
+        //         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        //         new Claim(ClaimTypes.Name, user.Name),
+        //         new Claim(ClaimTypes.Email, user.Email)
+        //     };
 
-            var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
-            await HttpContext.SignInAsync("Cookies", new ClaimsPrincipal(claimsIdentity));
+        //     var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
+        //     await HttpContext.SignInAsync("Cookies", new ClaimsPrincipal(claimsIdentity));
 
-            _logger.LogInformation("User {Email} registered and logged in successfully", model.Email);
-            return RedirectToAction("Index", "Home");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error during registration for {Email}", model.Email);
-            ModelState.AddModelError("", "An error occurred during registration.");
-            return View(model);
-        }
+        //     _logger.LogInformation("User {Email} registered and logged in successfully", model.Email);
+        //     return RedirectToAction("Index", "Home");
+        // }
+        // catch (Exception ex)
+        // {
+        //     _logger.LogError(ex, "Error during registration for {Email}", model.Email);
+        //     ModelState.AddModelError("", "An error occurred during registration.");
+        //     return View(model);
+        // }
     }
 
     [HttpPost]

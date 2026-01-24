@@ -342,7 +342,7 @@ public class DownloadJobService : BackgroundService
         _logger.LogInformation("Job {JobId} has been cancelled", jobId);
     }
     
-    private async Task SimulateDownloadAsync(HikApi hikApi, HikRemoteFile file, string outputPath, Action<int> progressCallback)
+    private async Task SimulateDownloadAsync(Hik.Api.Abstraction.IHikApi hikApi, HikRemoteFile file, string outputPath, Action<int> progressCallback)
     {
         var destinationPath = outputPath;
         var downloadId = hikApi.VideoService.StartDownloadFile(file.Name, destinationPath);
@@ -350,7 +350,7 @@ public class DownloadJobService : BackgroundService
         {
             await Task.Delay(5000);
             int downloadProgress = hikApi.VideoService.GetDownloadPosition(downloadId);
-            progressCallback(downloadProgress)
+            progressCallback(downloadProgress);
             if (downloadProgress == 100)
             {
                 hikApi.VideoService.StopDownloadFile(downloadId);

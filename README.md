@@ -1,4 +1,7 @@
 
+# Server Login
+admin@prosoftbd.com
+stex##2025 
 
 # Run Dotnet Web service 
 dotnet run --project=HikvisionService
