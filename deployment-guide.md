@@ -40,7 +40,7 @@ This guide provides step-by-step instructions for deploying the Hikvision Servic
 ```bash
 # Clone the repository (if using Git)
 git clone <repository-url>
-cd ezviz-camera/main-app
+cd ezviz-cameras/main-app
 
 # Publish the application
 dotnet publish HikvisionService/HikvisionService.csproj -c Release -o ./publish
@@ -107,27 +107,30 @@ export ASPNETCORE_ENVIRONMENT=Production
 
 ```
 [Unit]
-Description=Hikvision Service
+Description=Camera Web App
 After=network.target
 
 [Service]
-WorkingDirectory=/path/to/publish/directory
-ExecStart=/path/to/publish/directory/HikvisionService
+WorkingDirectory=/home/ariful/ezviz-cameras
+ExecStart=/usr/bin/dotnet /home/ariful/ezviz-cameras/HikvisionService/publish/HikvisionService.dll
+
 Restart=always
 RestartSec=10
-SyslogIdentifier=hikvision-service
-User=<your-user>
+KillSignal=SIGINT
+SyslogIdentifier=ezviz-app
+User=ariful
 Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://0.0.0.0:5000
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-Save this file as `/etc/systemd/system/hikvision-service.service` and enable it:
+Save this file as `/etc/systemd/system/ezviz-cameras.service` and enable it:
 
 ```bash
-sudo systemctl enable hikvision-service
-sudo systemctl start hikvision-service
+sudo systemctl enable ezviz-cameras
+sudo systemctl start ezviz-cameras
 ```
 
 ### Option 2: Using a Reverse Proxy (Nginx)
@@ -186,10 +189,10 @@ server {
 }
 ```
 
-Save this file as `/etc/nginx/sites-available/hikvision-service` and enable it:
+Save this file as `/etc/nginx/sites-available/ezviz-cameras` and enable it:
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/hikvision-service /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/ezviz-cameras /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl restart nginx
 ```

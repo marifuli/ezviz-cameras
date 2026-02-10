@@ -58,47 +58,25 @@ Create a new Nginx configuration file:
 ```nginx
 server {
     listen 80;
-    server_name YOUR_SERVER_IP;  # Replace with your actual IP address
+    server_name stex-cameras.prosoftbd.com;  # Change to your domain or use _ for all
 
     location / {
         proxy_pass http://localhost:5000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection keep-alive;
         proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    # Increase max upload size for video files
-    client_max_body_size 500M;
-
-    # Add custom error pages
-    error_page 404 /404.html;
-    error_page 500 502 503 504 /50x.html;
-
-    # Optimize for video streaming if needed
-    location /api/video {
-        proxy_pass http://localhost:5000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection keep-alive;
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-        proxy_buffering off;
-        proxy_read_timeout 300s;
     }
 }
 ```
 
-Save this file as `/etc/nginx/sites-available/hikvision-service`
+Save this file as `/etc/nginx/sites-available/ezviz-camera`
 
 ### 4. Enable the Nginx Configuration
 
 ```bash
 # Create a symbolic link to enable the site
-sudo ln -s /etc/nginx/sites-available/hikvision-service /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/ezviz-camera /etc/nginx/sites-enabled/
 
 # Test the configuration
 sudo nginx -t
@@ -138,7 +116,7 @@ WorkingDirectory=/path/to/publish/directory
 ExecStart=/path/to/publish/directory/HikvisionService
 Restart=always
 RestartSec=10
-SyslogIdentifier=hikvision-service
+SyslogIdentifier=ezviz-camera
 User=<your-user>
 Environment=ASPNETCORE_ENVIRONMENT=Production
 
@@ -146,11 +124,11 @@ Environment=ASPNETCORE_ENVIRONMENT=Production
 WantedBy=multi-user.target
 ```
 
-Save this file as `/etc/systemd/system/hikvision-service.service` and enable it:
+Save this file as `/etc/systemd/system/ezviz-camera.service` and enable it:
 
 ```bash
-sudo systemctl enable hikvision-service
-sudo systemctl start hikvision-service
+sudo systemctl enable ezviz-camera
+sudo systemctl start ezviz-camera
 ```
 
 ### 7. Verify the Deployment
@@ -207,7 +185,7 @@ http {
 ## Troubleshooting
 
 1. **502 Bad Gateway errors**:
-   - Check if the application is running: `sudo systemctl status hikvision-service`
+   - Check if the application is running: `sudo systemctl status ezviz-camera`
    - Verify the application is listening on port 5000: `netstat -tulpn | grep 5000`
 
 2. **Permission issues**:

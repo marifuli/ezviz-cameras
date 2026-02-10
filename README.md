@@ -5,6 +5,8 @@ stex##2025
 
 # Run Dotnet Web service 
 dotnet run --project=HikvisionService
+# Deploy 
+cd ~/ezviz-cameras/HikvisionService && dotnet build && dotnet publish -c Release -o ~/ezviz-cameras/HikvisionService/publish 
 
 # Cams
 Godown 138.252.14.100 8001-8004
