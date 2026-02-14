@@ -3,6 +3,17 @@ using HikvisionService.Models;
 
 namespace HikvisionService.Data;
 
+public class FileDownloadJobDto
+{
+    public long Id { get; set; }
+    public string Status { get; set; } = "";
+    public int Progress { get; set; }
+    public DateTime CreatedAt { get; set; }
+
+    public long CameraId { get; set; }
+    public string CameraName { get; set; } = "";
+}
+
 public class HikvisionDbContext : DbContext
 {
     public HikvisionDbContext(DbContextOptions<HikvisionDbContext> options) : base(options)

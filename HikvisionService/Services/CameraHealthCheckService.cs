@@ -98,17 +98,17 @@ public class CameraHealthCheckService : BackgroundService
         try
         {
             // Set the library path to the current directory
-            string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            HikApi.SetLibraryPath(currentDirectory);
+            // string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            // HikApi.SetLibraryPath(currentDirectory);
             
-            // Initialize with proper logging and force reinitialization
-            HikApi.Initialize(
-                logLevel: 3, 
-                logDirectory: "logs", 
-                autoDeleteLogs: true,
-                waitTimeMilliseconds: 5000,
-                forceReinitialization: true
-            );
+            // // Initialize with proper logging and force reinitialization
+            // HikApi.Initialize(
+            //     logLevel: 3, 
+            //     logDirectory: "logs", 
+            //     autoDeleteLogs: true,
+            //     waitTimeMilliseconds: 5000,
+            //     forceReinitialization: true
+            // );
 
             // Login to camera with a short timeout
             var hikApi = HikApi.Login(
@@ -126,7 +126,7 @@ public class CameraHealthCheckService : BackgroundService
             
             // Logout and cleanup
             hikApi.Logout();
-            HikApi.Cleanup();
+            // HikApi.Cleanup();
             
             return true;
         }

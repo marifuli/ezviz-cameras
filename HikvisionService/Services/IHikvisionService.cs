@@ -1,5 +1,6 @@
 using HikvisionService.Models;
 using HikvisionService.Models.ViewModels;
+using HikvisionService.Data;
 using Hik.Api.Data;
 
 namespace HikvisionService.Services;
@@ -24,7 +25,7 @@ public interface IHikvisionService
     Task TriggerStorageCheckAsync();
     
     // Download job methods
-    Task<List<FileDownloadJob>> GetAllDownloadJobsAsync();
+    Task<List<FileDownloadJobDto>> GetAllDownloadJobsAsync();
     Task<List<FileDownloadJob>> GetActiveDownloadJobsAsync();
     Task<List<FileDownloadJob>> GetFailedDownloadJobsAsync();
     Task<List<FileDownloadJob>> GetCompletedDownloadJobsAsync();

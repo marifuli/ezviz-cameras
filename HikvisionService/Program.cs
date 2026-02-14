@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using HikvisionService.Data;
 using HikvisionService.Services;
+using Hik.Api;
 
 var dhakaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Dhaka");
 var dhakaTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, dhakaTimeZone);
@@ -23,6 +24,19 @@ builder.Services.Configure<RouteOptions>(options =>
 
 // Use Serilog
 builder.Host.UseSerilog();
+
+// configure HikApi
+string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+HikApi.SetLibraryPath(currentDirectory);
+
+// Initialize with proper logging and force reinitialization
+HikApi.Initialize(
+    logLevel: 3, 
+    logDirectory: "logs", 
+    autoDeleteLogs: true,
+    waitTimeMilliseconds: 5000,
+    forceReinitialization: true
+);
 
 // Add services to the container
 builder.Services.AddControllers();
@@ -126,5 +140,4 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-Log.Information("Hikvision Service starting...");
 app.Run();

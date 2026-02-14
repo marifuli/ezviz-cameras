@@ -92,7 +92,7 @@
         setInterval(() => refreshLogs(document.getElementById('currentFilter').textContent), 30000);
 
         function refreshLogs(level = document.getElementById('currentFilter').textContent) {
-            fetch(`/Logs/Refresh?logLevel=${level}`)
+            fetch(`/LogsView/Refresh?logLevel=${level}`)
                 .then(res => res.json())
                 .then(result => {
                     const logContent = document.getElementById('logContent');

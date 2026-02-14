@@ -29,26 +29,26 @@ namespace ConsoleApp
                     forceReinitialization: true // Force reinitialization to ensure clean state
                 );
 
-                // Please update IP Address, port and user credentials
-                var hikApi = HikApi.Login("138.252.14.100", 8003, "admin", "stex##2025");
+                // // Please update IP Address, port and user credentials
+                var hikApi = HikApi.Login("138.252.14.97", 8010, "admin", "XWBDVR");
                 Console.WriteLine("Login success");
 
-                // // Get Camera time
-                var cameraTime = hikApi.ConfigService.GetTime();
-                Console.WriteLine($"Camera time :{cameraTime}");
-                var currentTime = DateTime.Now;
-                if (Math.Abs((currentTime - cameraTime).TotalSeconds) > 5)
-                {
-                    hikApi.ConfigService.SetTime(currentTime);
-                }
+                // // // Get Camera time
+                // var cameraTime = hikApi.ConfigService.GetTime();
+                // Console.WriteLine($"Camera time :{cameraTime}");
+                // var currentTime = DateTime.Now;
+                // if (Math.Abs((currentTime - cameraTime).TotalSeconds) > 5)
+                // {
+                //     hikApi.ConfigService.SetTime(currentTime);
+                // }
 
                 // // GetNetworkConfig
-                var network = hikApi.ConfigService.GetNetworkConfig();
-                Console.WriteLine(JsonConvert.SerializeObject(network, Formatting.Indented));
+                // var network = hikApi.ConfigService.GetNetworkConfig();
+                // Console.WriteLine(JsonConvert.SerializeObject(network, Formatting.Indented));
 
-                // // GetDeviceConfig
-                var device = hikApi.ConfigService.GetDeviceConfig();
-                Console.WriteLine(JsonConvert.SerializeObject(device, Formatting.Indented));
+                // // // GetDeviceConfig
+                // var device = hikApi.ConfigService.GetDeviceConfig();
+                // Console.WriteLine(JsonConvert.SerializeObject(device, Formatting.Indented));
 
                 // // For NVR
                 // if (hikApi.IpChannels.Any())
@@ -81,36 +81,37 @@ namespace ConsoleApp
                     // }
 
                 //     //Get video files for last 4 hours
-                    var videos = await hikApi.VideoService.FindFilesAsync(DateTime.Now.AddHours(-4), DateTime.Now);
-                    Console.WriteLine($"Found {videos.Count} videos");
-                    foreach (var video in videos)
-                    {
-                        var destinationPath = Path.Combine(Environment.CurrentDirectory, "Videos", video.Name + ".mp4");
-                        var downloadId = hikApi.VideoService.StartDownloadFile(video.Name, destinationPath);
-                        Console.WriteLine($"Downloading {destinationPath}");
-                        do
-                        {
-                            await Task.Delay(5000);
-                            int downloadProgress = hikApi.VideoService.GetDownloadPosition(downloadId);
-                            Console.WriteLine($"Downloading {downloadProgress} %");
-                            if (downloadProgress == 100)
-                            {
-                                hikApi.VideoService.StopDownloadFile(downloadId);
-                                break;
-                            }
-                            else if (downloadProgress < 0 || downloadProgress > 100)
-                            {
-                                throw new InvalidOperationException($"UpdateDownloadProgress failed, progress value = {downloadProgress}");
-                            }
-                        }
-                        while (true);
-                        Console.WriteLine($"Downloaded {destinationPath}");
-                    }
+                    // var videos = await hikApi.VideoService.FindFilesAsync(DateTime.Now.AddHours(-4), DateTime.Now);
+                    // Console.WriteLine($"Found {videos.Count} videos");
+                    // foreach (var video in videos)
+                    // {
+                    //     var destinationPath = Path.Combine(Environment.CurrentDirectory, "Videos", video.Name + ".mp4");
+                    //     var downloadId = hikApi.VideoService.StartDownloadFile(video.Name, destinationPath);
+                    //     Console.WriteLine($"Downloading {destinationPath}");
+                    //     do
+                    //     {
+                    //         await Task.Delay(5000);
+                    //         int downloadProgress = hikApi.VideoService.GetDownloadPosition(downloadId);
+                    //         Console.WriteLine($"Downloading {downloadProgress} %");
+                    //         if (downloadProgress == 100)
+                    //         {
+                    //             hikApi.VideoService.StopDownloadFile(downloadId);
+                    //             break;
+                    //         }
+                    //         else if (downloadProgress < 0 || downloadProgress > 100)
+                    //         {
+                    //             throw new InvalidOperationException($"UpdateDownloadProgress failed, progress value = {downloadProgress}");
+                    //         }
+                    //     }
+                    //     while (true);
+                    //     Console.WriteLine($"Downloaded {destinationPath}");
+                    // }
                 // }
 
                 hikApi.Logout();
-                HikApi.Cleanup();
+                // HikApi.Cleanup();
                 Console.WriteLine($"Done");
+                await get_videos();
             }
             catch (HikException hikEx)
             {
@@ -122,6 +123,52 @@ namespace ConsoleApp
                 Console.WriteLine(ex.Message);
                 Console.WriteLine(ex.StackTrace);
             }
+        }
+        static async Task get_videos() 
+        {
+            string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            HikApi.SetLibraryPath(currentDirectory);
+            Console.WriteLine(currentDirectory);
+
+            HikApi.Initialize(
+                logLevel: 3, 
+                logDirectory: "logs", 
+                autoDeleteLogs: true,
+                waitTimeMilliseconds: 5000, // Increase timeout for better reliability
+                forceReinitialization: true // Force reinitialization to ensure clean state
+            );
+
+            // Please update IP Address, port and user credentials
+            var hikApi = HikApi.Login("138.252.14.97", 8010, "admin", "XWBDVR");
+            Console.WriteLine("--------- Login success 22");
+            var cameraTime = hikApi.ConfigService.GetTime();
+            Console.WriteLine($"-------- Camera time :{cameraTime}");
+            var videos = await hikApi.VideoService.FindFilesAsync(DateTime.Now.AddHours(-72), DateTime.Now);
+            Console.WriteLine($"Found {videos.Count} videos");
+            foreach (var video in videos)
+            {
+                var destinationPath = Path.Combine(Environment.CurrentDirectory, "Videos", video.Name + ".mp4");
+                var downloadId = hikApi.VideoService.StartDownloadFile(video.Name, destinationPath);
+                Console.WriteLine($"Downloading {destinationPath}");
+                do
+                {
+                    await Task.Delay(5000);
+                    int downloadProgress = hikApi.VideoService.GetDownloadPosition(downloadId);
+                    Console.WriteLine($"Downloading {downloadProgress} %");
+                    if (downloadProgress == 100)
+                    {
+                        hikApi.VideoService.StopDownloadFile(downloadId);
+                        break;
+                    }
+                    else if (downloadProgress < 0 || downloadProgress > 100)
+                    {
+                        throw new InvalidOperationException($"UpdateDownloadProgress failed, progress value = {downloadProgress}");
+                    }
+                }
+                while (true);
+                Console.WriteLine($"Downloaded {destinationPath}");
+            }
+            Console.WriteLine("--------- Login done");
         }
     }
 }

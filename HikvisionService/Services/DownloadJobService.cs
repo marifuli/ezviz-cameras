@@ -236,7 +236,7 @@ public class DownloadJobService : BackgroundService
                 try
                 {
                     hikApi.Logout();
-                    HikApi.Cleanup();
+                //     HikApi.Cleanup();
                 }
                 catch (Exception ex)
                 {

@@ -12,6 +12,7 @@ public class HikvisionService : IHikvisionService
     private readonly HikvisionDbContext _context;
     private readonly ILogger<HikvisionService> _logger;
     private readonly IServiceProvider _serviceProvider;
+    private bool _isInitialized = false;
 
     public HikvisionService(
         HikvisionDbContext context,
@@ -25,6 +26,21 @@ public class HikvisionService : IHikvisionService
 
     public async Task<List<HikRemoteFile>> GetAvailableFilesAsync(long cameraId, DateTime startTime, DateTime endTime, string fileType = "both")
     {
+        // if(!_isInitialized)
+        // {
+        //     string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        //     HikApi.SetLibraryPath(currentDirectory);
+            
+        //     // Initialize with proper logging and force reinitialization
+        //     HikApi.Initialize(
+        //         logLevel: 3, 
+        //         logDirectory: "logs", 
+        //         autoDeleteLogs: true,
+        //         waitTimeMilliseconds: 5000,
+        //         forceReinitialization: true
+        //     );
+        //     _isInitialized = true;
+        // }
         var camera = await GetCameraByIdAsync(cameraId);
         if (camera == null)
         {
@@ -37,17 +53,17 @@ public class HikvisionService : IHikvisionService
         try
         {
             // Set the library path to the current directory
-            string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            HikApi.SetLibraryPath(currentDirectory);
+            // string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            // HikApi.SetLibraryPath(currentDirectory);
             
-            // Initialize with proper logging and force reinitialization
-            HikApi.Initialize(
-                logLevel: 3, 
-                logDirectory: "logs", 
-                autoDeleteLogs: true,
-                waitTimeMilliseconds: 5000, // Increase timeout for better reliability
-                forceReinitialization: true // Force reinitialization to ensure clean state
-            );
+            // // Initialize with proper logging and force reinitialization
+            // HikApi.Initialize(
+            //     logLevel: 3, 
+            //     logDirectory: "logs", 
+            //     autoDeleteLogs: true,
+            //     waitTimeMilliseconds: 5000, // Increase timeout for better reliability
+            //     forceReinitialization: true // Force reinitialization to ensure clean state
+            // );
 
             // Login to the camera
             var hikApi = HikApi.Login(camera.IpAddress, camera.Port, camera.Username ?? "admin", camera.Password ?? "");
@@ -113,15 +129,7 @@ public class HikvisionService : IHikvisionService
         }
         finally
         {
-            // Always clean up SDK resources, even if an exception occurs
-            try
-            {
-                HikApi.Cleanup();
-            }
-            catch (Exception cleanupEx)
-            {
-                _logger.LogWarning(cleanupEx, "GetAvailableFilesAsync: Failed to clean up Hikvision SDK resources");
-            }
+
         }
 
         return files;
@@ -140,17 +148,17 @@ public class HikvisionService : IHikvisionService
         try
         {
             // Set the library path to the current directory
-            string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            HikApi.SetLibraryPath(currentDirectory);
+            // string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            // HikApi.SetLibraryPath(currentDirectory);
             
-            // Initialize with proper logging and force reinitialization
-            HikApi.Initialize(
-                logLevel: 3, 
-                logDirectory: "logs", 
-                autoDeleteLogs: true,
-                waitTimeMilliseconds: 5000, // Increase timeout for better reliability
-                forceReinitialization: true // Force reinitialization to ensure clean state
-            );
+            // // Initialize with proper logging and force reinitialization
+            // HikApi.Initialize(
+            //     logLevel: 3, 
+            //     logDirectory: "logs", 
+            //     autoDeleteLogs: true,
+            //     waitTimeMilliseconds: 5000, // Increase timeout for better reliability
+            //     forceReinitialization: true // Force reinitialization to ensure clean state
+            // );
             // Login to camera
             var hikApi = HikApi.Login(camera.IpAddress, camera.Port, camera.Username ?? "admin", camera.Password ?? "");
             
@@ -170,15 +178,7 @@ public class HikvisionService : IHikvisionService
         }
         finally
         {
-            // Always clean up SDK resources, even if an exception occurs
-            try
-            {
-                HikApi.Cleanup();
-            }
-            catch (Exception cleanupEx)
-            {
-                list.Add($"Failed to clean up Hikvision SDK resources: {cleanupEx.Message}");
-            }
+
         }
         return list;
     }
@@ -211,17 +211,17 @@ public class HikvisionService : IHikvisionService
         try
         {
             // Set the library path to the current directory
-            string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            HikApi.SetLibraryPath(currentDirectory);
+            // string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            // HikApi.SetLibraryPath(currentDirectory);
             
-            // Initialize with proper logging and force reinitialization
-            HikApi.Initialize(
-                logLevel: 3,
-                logDirectory: "logs",
-                autoDeleteLogs: true,
-                waitTimeMilliseconds: 5000,
-                forceReinitialization: true
-            );
+            // // Initialize with proper logging and force reinitialization
+            // HikApi.Initialize(
+            //     logLevel: 3,
+            //     logDirectory: "logs",
+            //     autoDeleteLogs: true,
+            //     waitTimeMilliseconds: 5000,
+            //     forceReinitialization: true
+            // );
 
             // Login to camera with a short timeout
             var hikApi = HikApi.Login(
@@ -242,7 +242,7 @@ public class HikvisionService : IHikvisionService
             
             // Logout and cleanup
             hikApi.Logout();
-            HikApi.Cleanup();
+            // HikApi.Cleanup();
             
             return true;
         }
@@ -255,16 +255,6 @@ public class HikvisionService : IHikvisionService
             camera.IsOnline = false;
             camera.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-            
-            // Ensure cleanup even if an exception occurs
-            try
-            {
-                HikApi.Cleanup();
-            }
-            catch
-            {
-                // Ignore cleanup errors
-            }
             
             return false;
         }
@@ -340,13 +330,30 @@ public class HikvisionService : IHikvisionService
     }
 
     // Download job methods
-    public async Task<List<FileDownloadJob>> GetAllDownloadJobsAsync()
+    // public async Task<List<FileDownloadJob>> GetAllDownloadJobsAsync()
+    // {
+    //     return await _context.FileDownloadJobs
+    //         .Include(j => j.Camera)
+    //         .OrderByDescending(j => j.CreatedAt)
+    //         .ToListAsync();
+    // }
+    public async Task<List<FileDownloadJobDto>> GetAllDownloadJobsAsync()
     {
         return await _context.FileDownloadJobs
             .Include(j => j.Camera)
             .OrderByDescending(j => j.CreatedAt)
+            .Select(j => new FileDownloadJobDto
+            {
+                Id = j.Id,
+                Status = j.Status,
+                Progress = j.Progress,
+                CreatedAt = j.CreatedAt,
+                CameraId = j.CameraId,
+                CameraName = j.Camera.Name
+            })
             .ToListAsync();
     }
+
 
     public async Task<List<FileDownloadJob>> GetActiveDownloadJobsAsync()
     {

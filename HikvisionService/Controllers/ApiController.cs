@@ -219,7 +219,7 @@ public class ApiController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting all download jobs");
-            return StatusCode(500, new { error = "Failed to get download jobs" });
+            return StatusCode(500, new { error = ex.Message });
         }
     }
 
