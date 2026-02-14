@@ -32,7 +32,7 @@ public class DownloadJobService : BackgroundService
         _checkInterval = TimeSpan.FromSeconds(intervalSeconds);
         
         // Get max concurrent downloads from configuration, default to 2
-        _maxConcurrentDownloads = configuration.GetValue<int>("DownloadJob:MaxConcurrentDownloads", 1);
+        _maxConcurrentDownloads = configuration.GetValue<int>("DownloadJob:MaxConcurrentDownloads", 120);
         _downloadSemaphore = new SemaphoreSlim(_maxConcurrentDownloads, _maxConcurrentDownloads);
     }
 

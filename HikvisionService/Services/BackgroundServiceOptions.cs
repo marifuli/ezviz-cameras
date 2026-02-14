@@ -20,5 +20,5 @@ public class StorageMonitoringOptions
 public class DownloadJobOptions
 {
     public int IntervalSeconds { get; set; } = 60;
-    public int MaxConcurrentDownloads { get; set; } = 2;
+    public int MaxConcurrentDownloads { get; set; } = 120;
 }
