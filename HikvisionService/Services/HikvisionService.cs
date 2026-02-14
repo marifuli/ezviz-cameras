@@ -26,21 +26,21 @@ public class HikvisionService : IHikvisionService
 
     public async Task<List<HikRemoteFile>> GetAvailableFilesAsync(long cameraId, DateTime startTime, DateTime endTime, string fileType = "both")
     {
-        // if(!_isInitialized)
-        // {
-        //     string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        //     HikApi.SetLibraryPath(currentDirectory);
+        if(!_isInitialized)
+        {
+            string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            HikApi.SetLibraryPath(currentDirectory);
             
-        //     // Initialize with proper logging and force reinitialization
-        //     HikApi.Initialize(
-        //         logLevel: 3, 
-        //         logDirectory: "logs", 
-        //         autoDeleteLogs: true,
-        //         waitTimeMilliseconds: 5000,
-        //         forceReinitialization: true
-        //     );
-        //     _isInitialized = true;
-        // }
+            // Initialize with proper logging and force reinitialization
+            HikApi.Initialize(
+                logLevel: 3, 
+                logDirectory: "logs", 
+                autoDeleteLogs: true,
+                waitTimeMilliseconds: 5000,
+                forceReinitialization: true
+            );
+            _isInitialized = true;
+        }
         var camera = await GetCameraByIdAsync(cameraId);
         if (camera == null)
         {
@@ -148,17 +148,17 @@ public class HikvisionService : IHikvisionService
         try
         {
             // Set the library path to the current directory
-            // string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            // HikApi.SetLibraryPath(currentDirectory);
+            string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            HikApi.SetLibraryPath(currentDirectory);
             
-            // // Initialize with proper logging and force reinitialization
-            // HikApi.Initialize(
-            //     logLevel: 3, 
-            //     logDirectory: "logs", 
-            //     autoDeleteLogs: true,
-            //     waitTimeMilliseconds: 5000, // Increase timeout for better reliability
-            //     forceReinitialization: true // Force reinitialization to ensure clean state
-            // );
+            // Initialize with proper logging and force reinitialization
+            HikApi.Initialize(
+                logLevel: 3, 
+                logDirectory: "logs", 
+                autoDeleteLogs: true,
+                waitTimeMilliseconds: 5000, // Increase timeout for better reliability
+                forceReinitialization: true // Force reinitialization to ensure clean state
+            );
             // Login to camera
             var hikApi = HikApi.Login(camera.IpAddress, camera.Port, camera.Username ?? "admin", camera.Password ?? "");
             
