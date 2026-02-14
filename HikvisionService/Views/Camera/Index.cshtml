@@ -5,12 +5,20 @@
 
 <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold">Cameras</h1>
-    <a href="@Url.Action("Create")" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded flex items-center">
-        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-        </svg>
-        Add New Camera
-    </a>
+    <div class="flex space-x-2">
+        <a href="@Url.Action("Create")" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Add New Camera
+        </a>
+        <a href="@Url.Action("Index", "Store")" class="text-indigo-600 hover:text-indigo-700 font-bold py-2 px-4 rounded flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Manage Stores
+        </a>
+    </div>
 </div>
 
 @if (TempData["SuccessMessage"] != null)
@@ -27,7 +35,7 @@
     </div>
 }
 
-<div class="bg-white shadow-md rounded-lg overflow-hidden p-5">
+<div class="bg-white shadow-md rounded-lg overflow-auto p-5">
     <table id="camerasTable" class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
             <tr>

@@ -299,28 +299,47 @@
                             $('#activeDownloads').html('<p class="text-center">No active downloads.</p>');
                             return;
                         }
-                        
-                        let html = '<div class="table-responsive">';
-                        html += '<table class="table table-bordered" width="100%" cellspacing="0">';
-                        html += '<thead><tr><th>Camera</th><th>File</th><th>Progress</th><th>Started</th><th>Action</th></tr></thead>';
-                        html += '<tbody>';
-                        
+                        let html = '<div class="overflow-x-auto">';
+                        html += '<table class="min-w-full divide-y divide-gray-200 border border-gray-200 text-sm">';
+                        html += '<thead class="bg-gray-100">';
+                        html += '<tr>';
+                        html += '<th class="px-4 py-2 text-left font-semibold text-gray-700">Camera</th>';
+                        html += '<th class="px-4 py-2 text-left font-semibold text-gray-700">File</th>';
+                        html += '<th class="px-4 py-2 text-left font-semibold text-gray-700">Progress</th>';
+                        html += '<th class="px-4 py-2 text-left font-semibold text-gray-700">Started</th>';
+                        html += '<th class="px-4 py-2 text-left font-semibold text-gray-700">Action</th>';
+                        html += '</tr>';
+                        html += '</thead>';
+                        html += '<tbody class="bg-white divide-y divide-gray-200">';
+
                         jobs.forEach(function(job) {
-                            html += '<tr>';
-                            html += `<td>${job.cameraName}</td>`;
-                            html += `<td>${job.fileName}</td>`;
-                            html += '<td>';
-                            html += `<div class="progress">`;
-                            html += `<div class="progress-bar" role="progressbar" style="width: ${job.progress}%" `;
-                            html += `aria-valuenow="${job.progress}" aria-valuemin="0" aria-valuemax="100">${job.progress}%</div>`;
+                            html += '<tr class="hover:bg-gray-50">';
+                            html += `<td class="px-4 py-2">${job.cameraName}</td>`;
+                            html += `<td class="px-4 py-2">${job.fileName}</td>`;
+                            
+                            html += '<td class="px-4 py-2">';
+                            html += '<div class="w-full bg-gray-200 rounded-full h-4">';
+                            html += `<div class="bg-blue-600 h-4 rounded-full text-xs text-white flex items-center justify-center transition-all duration-300" 
+                                    style="width: ${job.progress}%">`;
+                            html += `${job.progress}%`;
+                            html += '</div>';
                             html += '</div>';
                             html += '</td>';
-                            html += `<td>${new Date(job.startTime).toLocaleString()}</td>`;
-                            html += `<td><button class="btn btn-sm btn-danger cancel-job" data-id="${job.id}">Cancel</button></td>`;
+                            
+                            html += `<td class="px-4 py-2">${new Date(job.startTime).toLocaleString()}</td>`;
+                            
+                            html += `<td class="px-4 py-2">
+                                        <button class="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 cancel-job" 
+                                                data-id="${job.id}">
+                                            Cancel
+                                        </button>
+                                    </td>`;
+                            
                             html += '</tr>';
                         });
-                        
+
                         html += '</tbody></table></div>';
+
                         $('#activeDownloads').html(html);
                         
                         // Attach event handlers to cancel buttons
