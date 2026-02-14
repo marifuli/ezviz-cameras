@@ -1,3 +1,4 @@
+
 using System.IO;
 using System.Collections.Concurrent;
 using HikvisionService.Data;
@@ -16,6 +17,7 @@ public class DownloadJobService : BackgroundService
     private readonly int _maxConcurrentDownloads;
     private readonly SemaphoreSlim _downloadSemaphore;
     private readonly ConcurrentDictionary<long, CancellationTokenSource> _activeDownloads = new();
+    private readonly ConcurrentDictionary<long, byte> _activeCameras = new();
 
     public DownloadJobService(
         IServiceScopeFactory scopeFactory,
@@ -30,7 +32,7 @@ public class DownloadJobService : BackgroundService
         _checkInterval = TimeSpan.FromSeconds(intervalSeconds);
         
         // Get max concurrent downloads from configuration, default to 2
-        _maxConcurrentDownloads = configuration.GetValue<int>("DownloadJob:MaxConcurrentDownloads", 140);
+        _maxConcurrentDownloads = configuration.GetValue<int>("DownloadJob:MaxConcurrentDownloads", 1);
         _downloadSemaphore = new SemaphoreSlim(_maxConcurrentDownloads, _maxConcurrentDownloads);
     }
 
@@ -77,20 +79,29 @@ public class DownloadJobService : BackgroundService
             return;
         }
 
-        // Get pending jobs
-        var pendingJobs = await dbContext.FileDownloadJobs
+        // Get candidate jobs (fetch extra to account for filtered cameras)
+        var candidateJobs = await dbContext.FileDownloadJobs
             .Include(j => j.Camera)
             .Where(j => j.Status == "pending" || j.Status == "failed")
             .OrderBy(j => j.CreatedAt)
-            .Take(10) // Process in batches
+            .Take(500) // Fetch extra to account for filtered cameras
             .ToListAsync(stoppingToken);
+
+        // Filter: one job per camera, excluding cameras already being processed
+        var pendingJobs = candidateJobs
+            .Where(j => !_activeCameras.ContainsKey(j.Camera.Id))
+            .GroupBy(j => j.Camera.Id)
+            .Select(g => g.First())
+            .Take(_maxConcurrentDownloads)
+            .ToList();
 
         if (!pendingJobs.Any())
         {
             return;
         }
 
-        _logger.LogInformation("Found {PendingJobCount} pending download jobs", pendingJobs.Count);
+        _logger.LogInformation("Found {PendingJobCount} pending download jobs for {CameraCount} cameras", 
+            pendingJobs.Count, pendingJobs.Select(j => j.Camera.Id).Distinct().Count());
 
         // Process each job
         foreach (var job in pendingJobs)
@@ -114,6 +125,13 @@ public class DownloadJobService : BackgroundService
 
                 _ = Task.Run(async () =>
                 {
+                    // Claim this camera
+                    if (!_activeCameras.TryAdd(job.Camera.Id, 0))
+                    {
+                        _downloadSemaphore.Release();
+                        return;
+                    }
+
                     try
                     {
                         await DownloadFileAsync(job.Id, jobCts.Token);
@@ -124,6 +142,7 @@ public class DownloadJobService : BackgroundService
                     }
                     finally
                     {
+                        _activeCameras.TryRemove(job.Camera.Id, out _);
                         _downloadSemaphore.Release();
                         _activeDownloads.TryRemove(job.Id, out _);
                     }
@@ -137,7 +156,6 @@ public class DownloadJobService : BackgroundService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error starting download for job {JobId}", job.Id);
-                _downloadSemaphore.Release();
             }
         }
     }
@@ -166,19 +184,6 @@ public class DownloadJobService : BackgroundService
 
         try
         {
-            // Set the library path to the current directory
-            // string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            // HikApi.SetLibraryPath(currentDirectory);
-            
-            // // Initialize with proper logging and force reinitialization
-            // HikApi.Initialize(
-            //     logLevel: 3, 
-            //     logDirectory: "logs", 
-            //     autoDeleteLogs: true,
-            //     waitTimeMilliseconds: 5000,
-            //     forceReinitialization: true
-            // );
-
             // Login to camera
             var hikApi = HikApi.Login(
                 job.Camera.IpAddress, 
@@ -236,12 +241,10 @@ public class DownloadJobService : BackgroundService
                 try
                 {
                     hikApi.Logout();
-                //     HikApi.Cleanup();
                 }
                 catch (Exception ex)
                 {
                     _logger.LogWarning(ex, "Error during camera logout or SDK cleanup");
-                    // Continue with the process despite cleanup errors
                 }
             }
         }
