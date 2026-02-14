@@ -167,17 +167,17 @@ public class DownloadJobService : BackgroundService
         try
         {
             // Set the library path to the current directory
-            string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            HikApi.SetLibraryPath(currentDirectory);
+            // string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            // HikApi.SetLibraryPath(currentDirectory);
             
-            // Initialize with proper logging and force reinitialization
-            HikApi.Initialize(
-                logLevel: 3, 
-                logDirectory: "logs", 
-                autoDeleteLogs: true,
-                waitTimeMilliseconds: 5000,
-                forceReinitialization: true
-            );
+            // // Initialize with proper logging and force reinitialization
+            // HikApi.Initialize(
+            //     logLevel: 3, 
+            //     logDirectory: "logs", 
+            //     autoDeleteLogs: true,
+            //     waitTimeMilliseconds: 5000,
+            //     forceReinitialization: true
+            // );
 
             // Login to camera
             var hikApi = HikApi.Login(
@@ -199,8 +199,8 @@ public class DownloadJobService : BackgroundService
 
                 // Find the file to download
                 var files = await hikApi.VideoService.FindFilesAsync(
-                    job.FileStartTime.AddMinutes(-1), // Add a small buffer to ensure we find the file
-                    job.FileEndTime.AddMinutes(1)
+                    job.FileStartTime.AddMinutes(-10000), // Add a small buffer to ensure
+                    DateTime.UtcNow //job.FileEndTime.AddMinutes(10)
                 );
 
                 var fileToDownload = files.FirstOrDefault(f => f.Name == job.FileName);

@@ -348,37 +348,92 @@ public class HikvisionService : IHikvisionService
                 Status = j.Status,
                 Progress = j.Progress,
                 CreatedAt = j.CreatedAt,
+                StartTime = j.StartTime,
+                EndTime = j.EndTime,
+                UpdatedAt = j.UpdatedAt,
                 CameraId = j.CameraId,
-                CameraName = j.Camera.Name
+                CameraName = j.Camera.Name,
+                FileName = j.FileName,
+                FileType = j.FileType,
+                FileSize = j.FileSize,
+                ErrorMessage = j.ErrorMessage
             })
             .ToListAsync();
     }
 
 
-    public async Task<List<FileDownloadJob>> GetActiveDownloadJobsAsync()
+    public async Task<List<FileDownloadJobDto>> GetActiveDownloadJobsAsync()
     {
         return await _context.FileDownloadJobs
             .Include(j => j.Camera)
             .Where(j => j.Status == "downloading")
             .OrderByDescending(j => j.StartTime)
+            .Select(j => new FileDownloadJobDto
+            {
+                Id = j.Id,
+                Status = j.Status,
+                Progress = j.Progress,
+                CreatedAt = j.CreatedAt,
+                StartTime = j.StartTime,
+                EndTime = j.EndTime,
+                UpdatedAt = j.UpdatedAt,
+                CameraId = j.CameraId,
+                CameraName = j.Camera.Name,
+                FileName = j.FileName,
+                FileType = j.FileType,
+                FileSize = j.FileSize,
+                ErrorMessage = j.ErrorMessage
+            })
             .ToListAsync();
     }
 
-    public async Task<List<FileDownloadJob>> GetFailedDownloadJobsAsync()
+    public async Task<List<FileDownloadJobDto>> GetFailedDownloadJobsAsync()
     {
         return await _context.FileDownloadJobs
             .Include(j => j.Camera)
             .Where(j => j.Status == "failed")
             .OrderByDescending(j => j.UpdatedAt)
+            .Select(j => new FileDownloadJobDto
+            {
+                Id = j.Id,
+                Status = j.Status,
+                Progress = j.Progress,
+                CreatedAt = j.CreatedAt,
+                StartTime = j.StartTime,
+                EndTime = j.EndTime,
+                UpdatedAt = j.UpdatedAt,
+                CameraId = j.CameraId,
+                CameraName = j.Camera.Name,
+                FileName = j.FileName,
+                FileType = j.FileType,
+                FileSize = j.FileSize,
+                ErrorMessage = j.ErrorMessage
+            })
             .ToListAsync();
     }
     
-    public async Task<List<FileDownloadJob>> GetCompletedDownloadJobsAsync()
+    public async Task<List<FileDownloadJobDto>> GetCompletedDownloadJobsAsync()
     {
         return await _context.FileDownloadJobs
             .Include(j => j.Camera)
             .Where(j => j.Status == "completed")
             .OrderByDescending(j => j.EndTime)
+            .Select(j => new FileDownloadJobDto
+            {
+                Id = j.Id,
+                Status = j.Status,
+                Progress = j.Progress,
+                CreatedAt = j.CreatedAt,
+                StartTime = j.StartTime,
+                EndTime = j.EndTime,
+                UpdatedAt = j.UpdatedAt,
+                CameraId = j.CameraId,
+                CameraName = j.Camera.Name,
+                FileName = j.FileName,
+                FileType = j.FileType,
+                FileSize = j.FileSize,
+                ErrorMessage = j.ErrorMessage
+            })
             .ToListAsync();
     }
 

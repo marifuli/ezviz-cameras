@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using HikvisionService.Models;
 using HikvisionService.Services;
 using HikvisionService.Models.ViewModels;
+using HikvisionService.Data;
 
 namespace HikvisionService.Controllers;
 
@@ -209,7 +210,7 @@ public class ApiController : ControllerBase
 
     // Download job endpoints
     [HttpGet("download-jobs")]
-    public async Task<ActionResult<List<FileDownloadJob>>> GetAllDownloadJobs()
+    public async Task<ActionResult<List<FileDownloadJobDto>>> GetAllDownloadJobs()
     {
         try
         {
@@ -224,7 +225,7 @@ public class ApiController : ControllerBase
     }
 
     [HttpGet("download-jobs/active")]
-    public async Task<ActionResult<List<FileDownloadJob>>> GetActiveDownloadJobs()
+    public async Task<ActionResult<List<FileDownloadJobDto>>> GetActiveDownloadJobs()
     {
         try
         {
@@ -239,7 +240,7 @@ public class ApiController : ControllerBase
     }
 
     [HttpGet("download-jobs/failed")]
-    public async Task<ActionResult<List<FileDownloadJob>>> GetFailedDownloadJobs()
+    public async Task<ActionResult<List<FileDownloadJobDto>>> GetFailedDownloadJobs()
     {
         try
         {

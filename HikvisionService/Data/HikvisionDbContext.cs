@@ -9,9 +9,18 @@ public class FileDownloadJobDto
     public string Status { get; set; } = "";
     public int Progress { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime? StartTime { get; set; }
+    public DateTime? EndTime { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 
     public long CameraId { get; set; }
     public string CameraName { get; set; } = "";
+    
+    // Additional properties for progress tracking
+    public string FileName { get; set; } = "";
+    public string FileType { get; set; } = "";
+    public long FileSize { get; set; }
+    public string? ErrorMessage { get; set; }
 }
 
 public class HikvisionDbContext : DbContext

@@ -26,9 +26,9 @@ public interface IHikvisionService
     
     // Download job methods
     Task<List<FileDownloadJobDto>> GetAllDownloadJobsAsync();
-    Task<List<FileDownloadJob>> GetActiveDownloadJobsAsync();
-    Task<List<FileDownloadJob>> GetFailedDownloadJobsAsync();
-    Task<List<FileDownloadJob>> GetCompletedDownloadJobsAsync();
+    Task<List<FileDownloadJobDto>> GetActiveDownloadJobsAsync();
+    Task<List<FileDownloadJobDto>> GetFailedDownloadJobsAsync();
+    Task<List<FileDownloadJobDto>> GetCompletedDownloadJobsAsync();
     Task<FileDownloadJob?> GetDownloadJobByIdAsync(long id);
     Task<bool> RetryDownloadJobAsync(long id);
     Task<bool> CancelDownloadJobAsync(long id);
