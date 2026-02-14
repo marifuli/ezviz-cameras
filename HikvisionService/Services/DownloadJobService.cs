@@ -84,7 +84,7 @@ public class DownloadJobService : BackgroundService
             .Include(j => j.Camera)
             .Where(j => j.Status == "pending" || j.Status == "failed")
             .OrderBy(j => j.CreatedAt)
-            .Take(500) // Fetch extra to account for filtered cameras
+            .Take(5000) // Fetch extra to account for filtered cameras
             .ToListAsync(stoppingToken);
 
         // Filter: one job per camera, excluding cameras already being processed
@@ -203,19 +203,19 @@ public class DownloadJobService : BackgroundService
                 string finalFilePath = job.DownloadPath;
 
                 // Find the file to download
-                var files = await hikApi.VideoService.FindFilesAsync(
-                    job.FileStartTime.AddMinutes(-10000), // Add a small buffer to ensure
-                    DateTime.UtcNow //job.FileEndTime.AddMinutes(10)
-                );
+                // var files = await hikApi.VideoService.FindFilesAsync(
+                //     job.FileStartTime.AddMinutes(-10000), // Add a small buffer to ensure
+                //     DateTime.UtcNow //job.FileEndTime.AddMinutes(10)
+                // );
 
-                var fileToDownload = files.FirstOrDefault(f => f.Name == job.FileName);
-                if (fileToDownload == null)
-                {
-                    throw new Exception($"File {job.FileName} not found on camera");
-                }
+                // var fileToDownload = files.FirstOrDefault(f => f.Name == job.FileName);
+                // if (fileToDownload == null)
+                // {
+                //     throw new Exception($"File {job.FileName} not found on camera");
+                // }
 
                 // Simulate download with progress reporting
-                await SimulateDownloadAsync(hikApi, fileToDownload, tempFilePath, progress => UpdateDownloadProgress(job.Id, progress, dbContext));
+                await SimulateDownloadAsync(hikApi, job.FileName, tempFilePath, progress => UpdateDownloadProgress(job.Id, progress, dbContext));
 
                 // Move the temp file to the final location (atomic operation)
                 File.Move(tempFilePath, finalFilePath, true);
@@ -345,10 +345,10 @@ public class DownloadJobService : BackgroundService
         _logger.LogInformation("Job {JobId} has been cancelled", jobId);
     }
     
-    private async Task SimulateDownloadAsync(Hik.Api.Abstraction.IHikApi hikApi, HikRemoteFile file, string outputPath, Action<int> progressCallback)
+    private async Task SimulateDownloadAsync(Hik.Api.Abstraction.IHikApi hikApi, string fileName, string outputPath, Action<int> progressCallback)
     {
         var destinationPath = outputPath;
-        var downloadId = hikApi.VideoService.StartDownloadFile(file.Name, destinationPath);
+        var downloadId = hikApi.VideoService.StartDownloadFile(fileName, destinationPath);
         do
         {
             await Task.Delay(5000);

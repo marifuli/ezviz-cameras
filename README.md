@@ -3,6 +3,8 @@
 admin@prosoftbd.com
 stex##2025 
 
+cd ~/ezviz-cameras/HikvisionService && dotnet build && dotnet publish -c Release -o ~/ezviz-cameras/HikvisionService/publish && sudo service ezviz-cameras start && cd ../ && git add . && git commit -m "Update concurr" && git push && exit
+
 # Run Dotnet Web service 
 dotnet run --project=HikvisionService
 # Deploy 
