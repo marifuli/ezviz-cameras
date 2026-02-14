@@ -84,7 +84,7 @@ public class DownloadJobService : BackgroundService
             .Include(j => j.Camera)
             .Where(j => j.Status == "pending" || j.Status == "failed")
             .OrderBy(j => j.CreatedAt)
-            .Take(5000) // Fetch extra to account for filtered cameras
+            .Take(2500) // Fetch extra to account for filtered cameras
             .ToListAsync(stoppingToken);
 
         // Filter: one job per camera, excluding cameras already being processed
