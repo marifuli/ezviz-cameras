@@ -17,6 +17,7 @@ public static class MigrationRunner
             // Apply migrations using raw SQL instead of EF Core migrations
             ApplyCameraStatusMigration(dbContext);
             ApplyStorageDriveMigration(dbContext);
+            ApplyCameraHealthCheckMigration(dbContext);
             
             logger.LogInformation("Migrations applied successfully");
         }
@@ -86,5 +87,30 @@ public static class MigrationRunner
                 CREATE INDEX IX_storage_drives_status ON storage_drives(status);
             ");
         }
+    }
+    
+    private static void ApplyCameraHealthCheckMigration(HikvisionDbContext dbContext)
+    {
+        // Add new columns to cameras table
+        dbContext.Database.ExecuteSqlRaw(@"
+        -- Check if column exists before adding
+        SELECT CASE 
+            WHEN NOT EXISTS (SELECT * FROM pragma_table_info('cameras') WHERE name = 'last_error')
+            THEN 'ALTER TABLE cameras ADD COLUMN last_error TEXT NULL;'
+            ELSE '-- Column last_error already exists'
+        END;
+
+        SELECT CASE 
+            WHEN NOT EXISTS (SELECT * FROM pragma_table_info('cameras') WHERE name = 'last_error_at')
+            THEN 'ALTER TABLE cameras ADD COLUMN last_error_at TEXT NULL;'
+            ELSE '-- Column last_error_at already exists'
+        END;
+
+        SELECT CASE 
+            WHEN NOT EXISTS (SELECT * FROM pragma_table_info('cameras') WHERE name = 'last_health_check_at')
+            THEN 'ALTER TABLE cameras ADD COLUMN last_health_check_at TEXT NULL;'
+            ELSE '-- Column last_health_check_at already exists'
+        END;
+        ");
     }
 }

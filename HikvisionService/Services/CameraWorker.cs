@@ -15,13 +15,16 @@ public class CameraWorker : BackgroundService
     private readonly ILogger<CameraWorker> _logger;
     private readonly SemaphoreSlim _downloadSemaphore;
     private readonly CancellationTokenSource _shutdownCts = new();
-    private Task _executingTask;
+    private Task? _executingTask;
     private bool _isStopping;
     private int healthCheckInterval;
     private int maxPerCamera;
     private int _activeDownloadCount = 0;
     private DateTime? _lastCheckTime;
     private string? _lastError;
+
+    // Public property to access the camera ID
+    public long CameraId => _cameraId;
 
     public CameraWorker(
         long cameraId,
@@ -38,7 +41,7 @@ public class CameraWorker : BackgroundService
         _downloadSemaphore = new SemaphoreSlim(maxPerCamera, maxPerCamera);
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("CameraWorker for Camera {CameraId} started", _cameraId);
         
@@ -47,6 +50,13 @@ public class CameraWorker : BackgroundService
             stoppingToken, _shutdownCts.Token);
         var linkedToken = linkedCts.Token;
 
+        // Store the executing task
+        _executingTask = ExecuteInternalAsync(linkedToken);
+        return _executingTask;
+    }
+
+    private async Task ExecuteInternalAsync(CancellationToken linkedToken)
+    {
         try
         {
             while (!linkedToken.IsCancellationRequested && !_isStopping)

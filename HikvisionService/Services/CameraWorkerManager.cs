@@ -39,14 +39,34 @@ public class CameraWorkerManager : BackgroundService
                 {
                     await RefreshWorkersAsync(stoppingToken);
                 }
+                catch (OperationCanceledException)
+                {
+                    // Normal shutdown, break out of loop
+                    _logger.LogInformation("Camera Worker Manager is shutting down...");
+                    break;
+                }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error refreshing camera workers");
                 }
 
                 // Wait for next refresh or cancellation
-                await Task.Delay(_refreshInterval, stoppingToken);
+                try
+                {
+                    await Task.Delay(_refreshInterval, stoppingToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Normal shutdown
+                    _logger.LogInformation("Camera Worker Manager delay cancelled, shutting down...");
+                    break;
+                }
             }
+        }
+        catch (OperationCanceledException)
+        {
+            // Normal shutdown
+            _logger.LogInformation("Camera Worker Manager operation cancelled");
         }
         finally
         {
@@ -103,6 +123,9 @@ public class CameraWorkerManager : BackgroundService
 
     private async Task RefreshWorkersAsync(CancellationToken stoppingToken)
     {
+        // Check if we're already cancelled
+        stoppingToken.ThrowIfCancellationRequested();
+        
         using var scope = _services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<HikvisionDbContext>();
 
@@ -115,10 +138,14 @@ public class CameraWorkerManager : BackgroundService
         await _workersLock.WaitAsync(stoppingToken);
         try
         {
+            stoppingToken.ThrowIfCancellationRequested();
+            
             // Stop workers for cameras that no longer exist
             var workersToStop = _workers.Keys.Where(id => !cameraIds.Contains(id)).ToList();
             foreach (var cameraId in workersToStop)
             {
+                stoppingToken.ThrowIfCancellationRequested();
+                
                 if (_workers.TryGetValue(cameraId, out var worker))
                 {
                     _logger.LogInformation("Stopping worker for camera {CameraId}", cameraId);
@@ -130,6 +157,8 @@ public class CameraWorkerManager : BackgroundService
             // Start workers for new cameras
             foreach (var camera in cameras)
             {
+                stoppingToken.ThrowIfCancellationRequested();
+                
                 if (!_workers.ContainsKey(camera.Id))
                 {
                     _logger.LogInformation("Starting worker for camera {CameraId}: {CameraName}", 
@@ -150,7 +179,15 @@ public class CameraWorkerManager : BackgroundService
                         }
                     }, stoppingToken);
                     
-                    await Task.Delay(1000, stoppingToken); // Stagger starts
+                    try
+                    {
+                        await Task.Delay(1000, stoppingToken); // Stagger starts
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        _logger.LogInformation("Worker start staggering cancelled");
+                        break;
+                    }
                 }
             }
         }
@@ -159,6 +196,7 @@ public class CameraWorkerManager : BackgroundService
             _workersLock.Release();
         }
     }
+
     // In CameraWorkerManager.cs
     public async Task<List<WorkerStatusViewModel>> GetWorkerStatus()
     {
@@ -193,7 +231,7 @@ public class CameraWorkerManager : BackgroundService
     }
 
     // Helper method to get camera name
-    private async Task<string> GetCameraName(int cameraId)
+    private async Task<string> GetCameraName(long cameraId)
     {
         using var scope = _services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<HikvisionDbContext>();
