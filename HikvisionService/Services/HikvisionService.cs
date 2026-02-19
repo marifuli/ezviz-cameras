@@ -13,15 +13,18 @@ public class HikvisionService : IHikvisionService
     private readonly ILogger<HikvisionService> _logger;
     private readonly IServiceProvider _serviceProvider;
     private bool _isInitialized = false;
+    private readonly CameraWorkerManager _cameraWorkerManager;
 
     public HikvisionService(
         HikvisionDbContext context,
         ILogger<HikvisionService> logger,
-        IServiceProvider serviceProvider)
+        IServiceProvider serviceProvider,
+        CameraWorkerManager cameraWorkerManager)
     {
         _context = context;
         _logger = logger;
         _serviceProvider = serviceProvider;
+        _cameraWorkerManager = cameraWorkerManager;
     }
 
     public async Task<List<HikRemoteFile>> GetAvailableFilesAsync(long cameraId, DateTime startTime, DateTime endTime, string fileType = "both")
@@ -444,22 +447,6 @@ public class HikvisionService : IHikvisionService
             .FirstOrDefaultAsync(j => j.Id == id);
     }
 
-    public async Task<bool> RetryDownloadJobAsync(long id)
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var downloadJobService = scope.ServiceProvider.GetRequiredService<DownloadJobService>();
-        await downloadJobService.RetryJobAsync(id);
-        return true;
-    }
-
-    public async Task<bool> CancelDownloadJobAsync(long id)
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var downloadJobService = scope.ServiceProvider.GetRequiredService<DownloadJobService>();
-        await downloadJobService.CancelJobAsync(id);
-        return true;
-    }
-
     // Dashboard methods
     public async Task<DashboardViewModel> GetDashboardDataAsync()
     {
@@ -568,6 +555,10 @@ public class HikvisionService : IHikvisionService
             .ToDictionaryAsync(x => x.CameraName, x => x.Count);
             
         dashboard.DownloadsPerCamera = downloadsPerCamera;
+        
+        // You'll need to inject CameraWorkerManager or create a service to get this info
+        dashboard.ActiveWorkers = await _cameraWorkerManager.GetActiveWorkerCount(); 
+        dashboard.WorkerStatus = await _cameraWorkerManager.GetWorkerStatus();
         
         return dashboard;
     }

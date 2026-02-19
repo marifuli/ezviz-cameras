@@ -10,11 +10,13 @@ namespace HikvisionService.Controllers;
 [Route("api")]
 public class ApiController : ControllerBase
 {
+    private readonly CameraWorkerManager _workerManager;
     private readonly IHikvisionService _hikvisionService;
     private readonly ILogger<ApiController> _logger;
 
-    public ApiController(IHikvisionService hikvisionService, ILogger<ApiController> logger)
+    public ApiController(CameraWorkerManager workerManager, IHikvisionService hikvisionService, ILogger<ApiController> logger)
     {
+        _workerManager = workerManager;
         _hikvisionService = hikvisionService;
         _logger = logger;
     }
@@ -33,6 +35,12 @@ public class ApiController : ControllerBase
             _logger.LogError(ex, "Error getting dashboard data");
             return StatusCode(500, new { error = "Failed to get dashboard data" });
         }
+    }
+    [HttpGet("worker-status")]
+    public IActionResult GetWorkerStatus()
+    {
+        // You'll need to expose worker status from the manager
+        return Ok(_workerManager.GetWorkerStatus());
     }
 
     // Camera endpoints
@@ -273,44 +281,6 @@ public class ApiController : ControllerBase
         }
     }
 
-    [HttpPost("download-jobs/{id}/retry")]
-    public async Task<ActionResult> RetryDownloadJob(long id)
-    {
-        try
-        {
-            bool success = await _hikvisionService.RetryDownloadJobAsync(id);
-            if (!success)
-            {
-                return NotFound(new { error = $"Download job with ID {id} not found" });
-            }
-            return Ok(new { message = $"Download job {id} retry triggered" });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrying download job {JobId}", id);
-            return StatusCode(500, new { error = $"Failed to retry download job {id}" });
-        }
-    }
-
-    [HttpPost("download-jobs/{id}/cancel")]
-    public async Task<ActionResult> CancelDownloadJob(long id)
-    {
-        try
-        {
-            bool success = await _hikvisionService.CancelDownloadJobAsync(id);
-            if (!success)
-            {
-                return NotFound(new { error = $"Download job with ID {id} not found" });
-            }
-            return Ok(new { message = $"Download job {id} cancelled" });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error cancelling download job {JobId}", id);
-            return StatusCode(500, new { error = $"Failed to cancel download job {id}" });
-        }
-    }
-    
     // Footage endpoints
     [HttpGet("footage")]
     public async Task<ActionResult<List<FootageFileViewModel>>> GetFootageFiles(

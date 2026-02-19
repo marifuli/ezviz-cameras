@@ -23,6 +23,22 @@ public class DashboardViewModel
     
     // Camera statistics
     public Dictionary<string, int> DownloadsPerCamera { get; set; } = new Dictionary<string, int>();
+    
+    // NEW properties for worker status
+    public int ActiveWorkers { get; set; }
+    public List<Camera> Cameras { get; set; } = new(); // All cameras
+    public List<WorkerStatusViewModel> WorkerStatus { get; set; } = new();
+}
+
+// NEW ViewModel for worker status
+public class WorkerStatusViewModel
+{
+    public long CameraId { get; set; }
+    public string CameraName { get; set; } = string.Empty;
+    public bool IsRunning { get; set; }
+    public int ActiveDownloadCount { get; set; }
+    public DateTime? LastCheckTime { get; set; }
+    public string? LastError { get; set; }
 }
 
 public class CameraStatusViewModel

@@ -30,9 +30,7 @@ public interface IHikvisionService
     Task<List<FileDownloadJobDto>> GetFailedDownloadJobsAsync();
     Task<List<FileDownloadJobDto>> GetCompletedDownloadJobsAsync();
     Task<FileDownloadJob?> GetDownloadJobByIdAsync(long id);
-    Task<bool> RetryDownloadJobAsync(long id);
-    Task<bool> CancelDownloadJobAsync(long id);
-    
+ 
     // Dashboard methods
     Task<DashboardViewModel> GetDashboardDataAsync();
     

@@ -79,7 +79,7 @@ builder.Services.AddScoped<IHikvisionService, HikvisionService.Services.Hikvisio
 // Register background services
 builder.Services.AddHostedService<CameraHealthCheckService>();
 builder.Services.AddHostedService<StorageMonitoringService>();
-builder.Services.AddHostedService<DownloadJobService>();
+builder.Services.AddHostedService<CameraWorkerManager>();
 
 // Configure CORS for Laravel integration
 builder.Services.AddCors(options =>

@@ -46,6 +46,16 @@ public class Camera
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; }
 
+
+    [Column("last_error")]
+    public string? LastError { get; set; }
+    
+    [Column("last_error_at")]
+    public DateTime? LastErrorAt { get; set; }
+
+    [Column("last_health_check_at")]
+    public DateTime? LastHealthCheckAt { get; set; }
+
     // Navigation property
     public virtual Store? Store { get; set; }
     public virtual ICollection<FileDownloadJob> FileDownloadJobs { get; set; } = new List<FileDownloadJob>();
