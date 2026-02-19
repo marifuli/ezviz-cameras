@@ -559,6 +559,7 @@ public class HikvisionService : IHikvisionService
         // You'll need to inject CameraWorkerManager or create a service to get this info
         dashboard.ActiveWorkers = await _cameraWorkerManager.GetActiveWorkerCount(); 
         dashboard.WorkerStatus = await _cameraWorkerManager.GetWorkerStatus();
+        dashboard.Cameras = await _context.Cameras.ToListAsync();
         
         return dashboard;
     }

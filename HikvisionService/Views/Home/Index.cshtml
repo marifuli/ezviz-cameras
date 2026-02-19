@@ -331,6 +331,15 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
     
     <script>
+        window.workerStatus = @Html.Raw(Json.Serialize(Model.WorkerStatus));
+        
+        // Now you can use it in JavaScript
+        console.log(window.workerStatus);
+        
+        // Example: Loop through workers
+        window.workerStatus.forEach(function(worker) {
+            console.log(`Camera ${worker.cameraId}: ${worker.cameraName} - ${worker.isRunning ? 'Running' : 'Stopped'}`);
+        });
         $(document).ready(function() {
             // Check camera connection
             $('.check-camera').click(function() {
