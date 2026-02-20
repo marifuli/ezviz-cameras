@@ -56,7 +56,7 @@ public class CameraWorker : BackgroundService
     }
 
     private async Task ExecuteInternalAsync(CancellationToken linkedToken)
-    {
+    {        
         try
         {
             while (!linkedToken.IsCancellationRequested && !_isStopping)
@@ -126,6 +126,7 @@ public class CameraWorker : BackgroundService
          _lastCheckTime = DateTime.UtcNow;
         try
         {
+
             using var scope = _services.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<HikvisionDbContext>();
 
@@ -222,6 +223,17 @@ public class CameraWorker : BackgroundService
     {
         Hik.Api.Abstraction.IHikApi hikApi = null;
         
+        string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        HikApi.SetLibraryPath(currentDirectory);
+        
+        // Initialize with proper logging and force reinitialization
+        HikApi.Initialize(
+            logLevel: 3, 
+            logDirectory: "logs", 
+            autoDeleteLogs: true,
+            waitTimeMilliseconds: 5000,
+            forceReinitialization: true
+        );
         try
         {
             hikApi = HikApi.Login(
@@ -343,21 +355,40 @@ public class CameraWorker : BackgroundService
 
     private async Task DownloadFileAsync(FileDownloadJob job, Camera camera, CancellationToken stoppingToken)
     {
-        Interlocked.Increment(ref _activeDownloadCount);
         using var scope = _services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<HikvisionDbContext>();
 
+        // IMPORTANT: Re-fetch the job and camera with the current DbContext
+        var currentJob = await dbContext.FileDownloadJobs
+            .Include(j => j.Camera)
+            .FirstOrDefaultAsync(j => j.Id == job.Id, stoppingToken);
+        var currentCamera = await dbContext.Cameras
+            .FirstOrDefaultAsync(c => c.Id == camera.Id, stoppingToken);
+
         Hik.Api.Abstraction.IHikApi hikApi = null;
         
+        string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        HikApi.SetLibraryPath(currentDirectory);
+        
+        // Initialize with proper logging and force reinitialization
+        HikApi.Initialize(
+            logLevel: 3, 
+            logDirectory: "logs", 
+            autoDeleteLogs: true,
+            waitTimeMilliseconds: 5000,
+            forceReinitialization: true
+        );
         try
         {
+            Interlocked.Increment(ref _activeDownloadCount);
             _logger.LogInformation("Camera {CameraId} starting download: {FileName}", camera.Id, job.FileName);
 
             // Update job status
-            job.Status = "downloading";
-            job.StartTime = DateTime.UtcNow;
-            job.UpdatedAt = DateTime.UtcNow;
+            currentJob.Status = "downloading";
+            currentJob.StartTime = DateTime.UtcNow;
+            currentJob.UpdatedAt = DateTime.UtcNow;
             await dbContext.SaveChangesAsync(stoppingToken);
+            _logger.LogInformation("Camera {CameraId} updated job status to downloading: job id: {JobId}", camera.Id, job.Id);
 
             // Login to camera
             hikApi = HikApi.Login(
@@ -383,10 +414,11 @@ public class CameraWorker : BackgroundService
                 await Task.Delay(5000, stoppingToken);
                 
                 int progress = hikApi.VideoService.GetDownloadPosition(downloadId);
+                _logger.LogInformation("Camera {CameraId} download progress: {Progress}%", camera.Id, progress);
                 
                 // Update progress
-                job.Progress = progress;
-                job.UpdatedAt = DateTime.UtcNow;
+                currentJob.Progress = progress;
+                currentJob.UpdatedAt = DateTime.UtcNow;
                 await dbContext.SaveChangesAsync(stoppingToken);
 
                 if (progress >= 100)
@@ -397,14 +429,13 @@ public class CameraWorker : BackgroundService
                     File.Move(tempFilePath, finalFilePath, true);
                     
                     // Update job as completed
-                    job.Status = "completed";
-                    job.EndTime = DateTime.UtcNow;
-                    job.UpdatedAt = DateTime.UtcNow;
+                    currentJob.Status = "completed";
+                    currentJob.EndTime = DateTime.UtcNow;
+                    currentJob.UpdatedAt = DateTime.UtcNow;
                     
                     // Update camera's last downloaded time
-                    camera.LastDownloadedAt = DateTime.UtcNow;
-                    camera.UpdatedAt = DateTime.UtcNow;
-                    
+                    currentCamera.LastDownloadedAt = DateTime.UtcNow;
+                    currentCamera.UpdatedAt = DateTime.UtcNow;
                     await dbContext.SaveChangesAsync(stoppingToken);
                     
                     _logger.LogInformation("Camera {CameraId} completed download: {FileName}", camera.Id, job.FileName);
@@ -414,18 +445,18 @@ public class CameraWorker : BackgroundService
         }
         catch (OperationCanceledException)
         {
-            job.Status = "pending";
-            job.ErrorMessage = "Download cancelled";
-            job.UpdatedAt = DateTime.UtcNow;
+            currentJob.Status = "pending";
+            currentJob.ErrorMessage = "Download cancelled";
+            currentJob.UpdatedAt = DateTime.UtcNow;
             await dbContext.SaveChangesAsync(stoppingToken);
             
             _logger.LogWarning("Camera {CameraId} download cancelled: {FileName}", camera.Id, job.FileName);
         }
         catch (Exception ex)
         {
-            job.Status = "failed";
-            job.ErrorMessage = ex.Message;
-            job.UpdatedAt = DateTime.UtcNow;
+            currentJob.Status = "failed";
+            currentJob.ErrorMessage = ex.Message;
+            currentJob.UpdatedAt = DateTime.UtcNow;
             await dbContext.SaveChangesAsync(stoppingToken);
             
             _logger.LogError(ex, "Camera {CameraId} download failed: {FileName}", camera.Id, job.FileName);
