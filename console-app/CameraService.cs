@@ -242,7 +242,7 @@ namespace ConsoleApp.Services
             CameraCredentials credentials,
             string fileName,
             string downloadPath,
-            Action<int>? progressCallback = null,
+            Action<int> progressCallback,
             CancellationToken cancellationToken = default)
         {
             IHikApi? hikApi = null;
@@ -280,7 +280,7 @@ namespace ConsoleApp.Services
                     int progress = hikApi.VideoService.GetDownloadPosition(downloadId);
                     
                     // Notify progress if callback is provided
-                    progressCallback?.Invoke(progress);
+                    progressCallback(progress);
 
                     if (progress >= 100)
                     {
