@@ -14,7 +14,7 @@ class CheckCameraStatus implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct()
+    public function __construct(public ?int $cameraId = null)
     {
         //
     }
@@ -25,8 +25,12 @@ class CheckCameraStatus implements ShouldQueue
     public function handle(): void
     {
         $service = new HikvisionService();
+        if ($this->cameraId) {
+            $service->testCameraConnection($this->cameraId);
+            return;
+        }
         Camera::get()->each(function($cam) use($service) {
-            $service->testCameraConnection($cam->id);
+            self::dispatch($cam->id);
         });
     }
 }

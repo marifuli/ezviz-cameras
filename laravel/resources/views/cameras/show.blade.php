@@ -85,6 +85,10 @@
                     <dd class="mt-1 text-sm text-gray-900">{{ $camera->port }}</dd>
                 </div>
                 <div>
+                    <dt class="text-sm font-medium text-gray-500">Password</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ $camera->password ?: 'Not set' }}</dd>
+                </div>
+                <div>
                     <dt class="text-sm font-medium text-gray-500">Username</dt>
                     <dd class="mt-1 text-sm text-gray-900">{{ $camera->username ?: 'Not set' }}</dd>
                 </div>

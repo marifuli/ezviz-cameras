@@ -32,12 +32,12 @@ class HikvisionService
 
             // Simulate connection test - randomly succeed or fail for demo
             $command = config('app.ezviz-console') . 'test';
-            $command .= ' ' . $camera->ip;
+            $command .= ' ' . $camera->ip_address;
             $command .= ' ' . $camera->port;
             $command .= ' ' . $camera->username;
             $command .= ' ' . $camera->password;
             $console = shell_exec( $command);
-            $isOnline = str_contains($console, "Result: {") && str_contains($console, "Connection successfu");
+            $isOnline = str_contains($console, "Connection successful");
 
             if ($isOnline) {
                 $camera->update([
@@ -56,7 +56,7 @@ class HikvisionService
                     $results[] = "Channel {$i}: " . ($isChannelOnline ? 'Online' : 'Offline');
                 }
             } else {
-                $errorMessage = 'Connection timeout or authentication failed';
+                $errorMessage = 'Connection timeout or authentication failed: ' . $console;
                 $camera->update([
                     'is_online' => false,
                     'last_health_check_at' => now(),

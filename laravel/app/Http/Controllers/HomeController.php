@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\HikvisionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\CheckCameraStatus;
 
 class HomeController extends Controller
 {
@@ -17,6 +18,7 @@ class HomeController extends Controller
 
     public function index(Request $request)
     {
+        CheckCameraStatus::dispatch();
         try {
             $dashboardData = $this->hikvisionService->getDashboardData();
             return view('dashboard.index', $dashboardData);

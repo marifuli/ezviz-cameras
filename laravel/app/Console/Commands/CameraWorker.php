@@ -37,9 +37,10 @@ class CameraWorker extends Command
                 // last job
                 $job = FileDownloadJob::where('camera_id', $this->cameraId)
                     ->whereHas('camera', fn($q) => $q->where('is_online', true))
-                    ->whereIn('status', ['failed', 'pending'])
+                    ->whereIn('status', ['failed', 'pending', 'downloading'])
+                    ->latest()
                     ->first();
-                dump("Job found " . $job->toJson());
+                // dd("Job found " . $job);
                 if($job) $this->processDownload($job);
             } catch (\Exception $e) {
                 $this->error("Error: " . $e->getMessage());
@@ -52,6 +53,9 @@ class CameraWorker extends Command
             sleep(30);
         }
 
+        FileDownloadJob::where('camera_id', $this->cameraId)
+            ->where('status', 'downloading')
+            ->update(['status' => 'failed']);
         // stop all processes
         foreach ($this->pids as $pid) {
             posix_kill($pid, SIGTERM);
@@ -63,34 +67,44 @@ class CameraWorker extends Command
     private function processDownload(FileDownloadJob $job)
     {
         $target = public_path($job->download_path);
-        // The command to run your .NET service
-        $command = config('app.ezviz-console');
-
-        // Add 'echo $$' to get the PID of the shell process
-        // We run it through 'sh -c' to get a proper PID
-        $fullCommand = 'sh -c \'echo $$; exec ' . $command . '\'';
-
-        // Open the process for reading
-        $handle = popen($fullCommand, 'r');
-
-        if ($handle === false) {
-            die('Failed to start the process.');
-        }
-
-        // The first line will be the PID
-        $pidLine = fgets($handle);
-        $this->pids[] = trim($pidLine);
-
-        // Now read the actual output line by line
-        while (!feof($handle)) {
-            $line = fgets($handle);
-            if ($line !== false) {
-                echo "Received: " . $line;
-                ob_flush();
-                flush();
+        
+        // Build command
+        $command = config('app.ezviz-console') . ' download ' . 
+            $job->camera->ip_address . ' ' . 
+            $job->camera->port . ' ' . 
+            $job->camera->username . ' ' . 
+            $job->camera->password . ' ' . 
+            $job->file_name . ' ' . 
+            $target;
+        
+        $this->line("Executing: " . $command);
+        
+        // Run the command and stream output
+        $process = popen($command, 'r');
+        
+        while (!feof($process)) {
+            $line = fgets($process);
+            if ($line) {
+                echo $line; // This will show in your console
+                flush();    // Force output
+                
+                // Update progress if needed
+                if (preg_match('/(\d+)%/', $line, $matches)) {
+                    $job->update([
+                        'progress' => $matches[1],
+                        'status' => 'downloading'
+                    ]);
+                } 
+                if(str_contains($line, "Download failed")) {
+                    $job->delete();
+                    dump("Deleted", $line);
+                }
             }
         }
-
-        pclose($handle);
+        
+        pclose($process);
+        
+        // Mark as complete
+        $job->update(['status' => 'completed', 'progress' => 100]);
     }
 }

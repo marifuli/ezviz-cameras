@@ -27,7 +27,6 @@ class CheckStorageStatus implements ShouldQueue
             $freeSpace = disk_free_space($drive->root_path);
             $totalSpace = disk_total_space($drive->root_path);
             $usedSpace = $totalSpace - $freeSpace;
-
             $drive->update([
                 'free_space' => $freeSpace,
                 'used_space' => $usedSpace,
