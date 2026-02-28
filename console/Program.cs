@@ -114,16 +114,13 @@ namespace ConsoleApp
 
             if (result.IsSuccess)
             {
-                Console.WriteLine($"✅ {result.Message}");
-                foreach (var channel in result.ChannelInfo)
-                {
-                    Console.WriteLine($"   📹 {channel}");
-                }
+                var jsonResponse = JsonConvert.SerializeObject(result, Formatting.Indented);
+                Console.WriteLine($"Result: {jsonResponse}");
                 return 0;
             }
             else
             {
-                Console.WriteLine($"❌ {result.Message}");
+                Console.WriteLine($"Error: {result.Message}");
                 return 1;
             }
         }
@@ -164,14 +161,13 @@ namespace ConsoleApp
 
             if (result.IsSuccess)
             {
-                Console.WriteLine($"✅ {result.Message}");
-                Console.WriteLine($"   📁 Found {result.FileCount} video files");
-                Console.WriteLine($"   💾 List saved to: {result.SavedToPath}");
+                var jsonResponse = JsonConvert.SerializeObject(result, Formatting.Indented);
+                Console.WriteLine($"Result: {jsonResponse}");
                 return 0;
             }
             else
             {
-                Console.WriteLine($"❌ {result.Message}");
+                Console.WriteLine($"Error: {result.Message}");
                 return 1;
             }
         }
@@ -198,28 +194,27 @@ namespace ConsoleApp
 
             var cameraService = new CameraService();
             
-            Console.WriteLine($"Starting download: {fileName}");
-            Console.WriteLine($"Save to: {savePath}");
+            Console.WriteLine($"Downloading: {fileName}");
+            Console.WriteLine($"Save path: {savePath}");
 
             var result = await cameraService.DownloadFileAsync(
                 credentials,
                 fileName,
                 savePath,
-                progress => Console.Write($"\r📥 Progress: {progress}%")
+                progress => Console.WriteLine($"\rProgress: {progress}%")
             );
 
             Console.WriteLine(); // New line after progress
 
             if (result.IsSuccess)
             {
-                Console.WriteLine($"✅ {result.Message}");
-                Console.WriteLine($"   💾 Downloaded to: {result.DownloadPath}");
-                Console.WriteLine($"   📊 File size: {result.FileSize / 1024 / 1024} MB");
+                var jsonResponse = JsonConvert.SerializeObject(result, Formatting.Indented);
+                Console.WriteLine($"Result: {jsonResponse}");
                 return 0;
             }
             else
             {
-                Console.WriteLine($"❌ {result.Message}");
+                Console.WriteLine($"Error: {result.Message}");
                 return 1;
             }
         }
