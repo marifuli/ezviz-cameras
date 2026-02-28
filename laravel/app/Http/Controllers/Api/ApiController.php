@@ -75,7 +75,13 @@ class ApiController extends Controller
     public function checkCameraConnection($id): JsonResponse
     {
         try {
-            $isOnline = $this->hikvisionService->checkCameraConnection($id);
+            $isOnline = false;
+            $results = $this->hikvisionService->testCameraConnection($id);
+            foreach ($results as $result) {
+                if (strpos($result, 'successful') !== false) {
+                    $isOnline = true;
+                }
+            }
             return response()->json(['isOnline' => $isOnline]);
         } catch (\Exception $ex) {
             Log::error("Error checking camera {$id} connection", ['error' => $ex->getMessage()]);

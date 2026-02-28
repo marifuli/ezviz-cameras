@@ -17,51 +17,6 @@ class HikvisionService
     }
 
     /**
-     * Get available files from camera (dummy implementation)
-     */
-    public function getAvailableFiles(int $cameraId, Carbon $startTime, Carbon $endTime, string $fileType = 'both'): Collection
-    {
-        $camera = Camera::find($cameraId);
-        if (!$camera) {
-            Log::warning("Camera with ID {$cameraId} not found");
-            return collect([]);
-        }
-
-        Log::info("Getting available files from camera {$camera->name} at {$camera->ip_address}:{$camera->port}");
-
-        // Dummy files simulation
-        $files = collect();
-
-        // Simulate finding files between start and end time
-        $currentTime = $startTime->copy();
-        while ($currentTime->lte($endTime)) {
-            // Simulate 1-2 files per hour
-            $fileCount = rand(1, 2);
-
-            for ($i = 0; $i < $fileCount; $i++) {
-                $fileStartTime = $currentTime->copy()->addMinutes(rand(0, 30));
-                $fileEndTime = $fileStartTime->copy()->addMinutes(rand(5, 30));
-
-                $file = [
-                    'fileName' => "CH001_{$fileStartTime->format('YmdHis')}.mp4",
-                    'fileType' => $fileType === 'photo' ? 'photo' : 'video',
-                    'fileSize' => rand(1024 * 1024, 100 * 1024 * 1024), // 1MB to 100MB
-                    'startTime' => $fileStartTime,
-                    'endTime' => $fileEndTime,
-                    'channelNumber' => 1,
-                ];
-
-                $files->push($file);
-            }
-
-            $currentTime->addHour();
-        }
-
-        Log::info("Found {$files->count()} files from camera {$camera->name}");
-        return $files;
-    }
-
-    /**
      * Test camera connection (dummy implementation)
      */
     public function testCameraConnection(int $cameraId): array
@@ -74,10 +29,15 @@ class HikvisionService
         $results = [];
 
         try {
-            Log::info("Testing camera {$camera->name} connection to {$camera->ip_address}:{$camera->port}");
 
             // Simulate connection test - randomly succeed or fail for demo
-            $isOnline = rand(1, 10) > 2; // 80% success rate
+            $command = config('app.ezviz-console') . 'test';
+            $command .= ' ' . $camera->ip;
+            $command .= ' ' . $camera->port;
+            $command .= ' ' . $camera->username;
+            $command .= ' ' . $camera->password;
+            $console = shell_exec( $command);
+            $isOnline = str_contains($console, "Result: {") && str_contains($console, "Connection successfu");
 
             if ($isOnline) {
                 $camera->update([
@@ -95,8 +55,6 @@ class HikvisionService
                     $isChannelOnline = rand(1, 10) > 1; // 90% channel success rate
                     $results[] = "Channel {$i}: " . ($isChannelOnline ? 'Online' : 'Offline');
                 }
-
-                Log::info("Camera {$camera->name} connection test successful");
             } else {
                 $errorMessage = 'Connection timeout or authentication failed';
                 $camera->update([
@@ -107,8 +65,8 @@ class HikvisionService
                 ]);
 
                 $results[] = "Camera {$camera->name} connection failed: {$errorMessage}";
-                Log::warning("Camera {$camera->name} connection failed");
             }
+            sleep(1);
         } catch (\Exception $ex) {
             $errorMessage = "Connection error: {$ex->getMessage()}";
             $camera->update([
@@ -119,27 +77,9 @@ class HikvisionService
             ]);
 
             $results[] = "Camera {$camera->name} connection failed: {$errorMessage}";
-            Log::error("Camera {$camera->name} connection test failed", ['error' => $ex->getMessage()]);
         }
 
         return $results;
-    }
-
-    /**
-     * Check camera connection status
-     */
-    public function checkCameraConnection(int $cameraId): bool
-    {
-        $results = $this->testCameraConnection($cameraId);
-
-        // Return true if any result indicates success
-        foreach ($results as $result) {
-            if (strpos($result, 'successful') !== false) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**

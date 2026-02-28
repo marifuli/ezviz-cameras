@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'timezone' => env('APP_TIMEZONE', 'UTC'),
+    'timezone' => 'Asia/Dhaka',
 
     /*
     |--------------------------------------------------------------------------
@@ -123,4 +123,5 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'ezviz-console' => "dotnet " . base_path("/../console-app/bin/Release/net6.0-windows/ConsoleApp.dll") . ' camera ',
 ];
