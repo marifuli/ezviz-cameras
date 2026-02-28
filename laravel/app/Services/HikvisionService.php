@@ -147,23 +147,6 @@ class HikvisionService
                 return $jobs->count();
             })
             ->toArray();
-
-        // Worker status (dummy data for now)
-        $workerStatus = $cameras->map(function ($camera) {
-            $activeDownloads = FileDownloadJob::where('camera_id', $camera->id)
-                ->where('status', 'downloading')
-                ->count();
-
-            return [
-                'camera_id' => $camera->id,
-                'camera_name' => $camera->name,
-                'is_running' => $camera->is_online,
-                'active_download_count' => $activeDownloads,
-                'last_check_time' => $camera->last_health_check_at,
-                'last_error' => $camera->last_error,
-            ];
-        });
-
         return [
             'total_cameras' => $totalCameras,
             'online_cameras' => $onlineCameras,
@@ -175,9 +158,7 @@ class HikvisionService
             'storage_drives' => $storageDrives,
             'downloads_per_day' => $downloadsPerDay,
             'downloads_per_camera' => $downloadsPerCamera,
-            'active_workers' => $cameras->where('is_online', true)->count(),
             'cameras' => $cameras,
-            'worker_status' => $workerStatus,
         ];
     }
 

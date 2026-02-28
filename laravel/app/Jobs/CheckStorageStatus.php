@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\StorageDrive;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -22,6 +23,17 @@ class CheckStorageStatus implements ShouldQueue
      */
     public function handle(): void
     {
-        //
+        StorageDrive::get()->each(function(StorageDrive $drive) {
+            $freeSpace = disk_free_space($drive->root_path);
+            $totalSpace = disk_total_space($drive->root_path);
+            $usedSpace = $totalSpace - $freeSpace;
+
+            $drive->update([
+                'free_space' => $freeSpace,
+                'used_space' => $usedSpace,
+                'total_space' => $totalSpace,
+                'last_checked_at' => now(),
+            ]);
+        });
     }
 }

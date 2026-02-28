@@ -12,7 +12,7 @@
     <!-- ===================== -->
     <!-- SUMMARY STAT CARDS -->
     <!-- ===================== -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
         <!-- Total Cameras -->
         <div class="bg-white rounded-xl shadow-sm p-4 flex justify-between items-center">
             <div>
@@ -46,17 +46,6 @@
             </div>
         </div>
 
-        <!-- Active Workers -->
-        <div class="bg-white rounded-xl shadow-sm p-4 flex justify-between items-center">
-            <div>
-                <p class="text-xs uppercase tracking-wide text-gray-500">Active Workers</p>
-                <p class="text-2xl font-bold text-gray-800">{{ $active_workers }}</p>
-            </div>
-            <div class="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center">
-                <i class="fas fa-tasks"></i>
-            </div>
-        </div>
-
         <!-- Active Downloads -->
         <div class="bg-white rounded-xl shadow-sm p-4 flex justify-between items-center">
             <div>
@@ -86,105 +75,6 @@
                     class="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg">
                 <i class="fas fa-sync"></i> Check All
             </button>
-        </div>
-    </div>
-
-    <!-- ===================== -->
-    <!-- WORKER STATUS TABLE -->
-    <!-- ===================== -->
-    <div class="bg-white rounded-xl shadow-sm">
-        <div class="px-5 py-4 border-b flex justify-between items-center">
-            <h2 class="font-semibold text-gray-800">Camera Workers Status</h2>
-            <span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-600">
-                {{ $active_workers }} / {{ $total_cameras }} Workers
-            </span>
-        </div>
-        <div class="p-4 overflow-x-auto" style="overflow: auto; height: 300px;">
-            <table class="w-full text-sm">
-                <thead class="text-gray-500 border-b">
-                    <tr>
-                        <th class="py-2 text-left">ID</th>
-                        <th class="py-2 text-left">Camera Name</th>
-                        <th class="py-2 text-left">IP Address</th>
-                        <th class="py-2 text-left">Status</th>
-                        <th class="py-2 text-left">Worker State</th>
-                        <th class="py-2 text-left">Active Downloads</th>
-                        <th class="py-2 text-left">Last Error</th>
-                        <th class="py-2 text-left">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y">
-                    @foreach ($cameras as $camera)
-                        @php
-                            $worker = collect($worker_status)->firstWhere('camera_id', $camera->id);
-                        @endphp
-                        <tr class="hover:bg-gray-50">
-                            <td class="py-2">{{ $camera->id }}</td>
-                            <td class="py-2 font-medium">{{ $camera->name }}</td>
-                            <td class="py-2">{{ $camera->ip_address }}</td>
-                            <td class="py-2">
-                                @if ($camera->is_online)
-                                    <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-600">
-                                        <i class="fas fa-circle text-xs mr-1"></i> Online
-                                    </span>
-                                @else
-                                    <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-600">
-                                        <i class="fas fa-circle text-xs mr-1"></i> Offline
-                                    </span>
-                                @endif
-                            </td>
-                            <td class="py-2">
-                                @if ($worker && $worker['is_running'])
-                                    <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-600">
-                                        <i class="fas fa-play mr-1"></i> Running
-                                    </span>
-                                @elseif($worker)
-                                    <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
-                                        <i class="fas fa-stop mr-1"></i> Stopped
-                                    </span>
-                                @else
-                                    <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
-                                        <i class="fas fa-hourglass mr-1"></i> Not Started
-                                    </span>
-                                @endif
-                            </td>
-                            <td class="py-2">
-                                @if ($worker && $worker['active_download_count'] > 0)
-                                    <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-600">
-                                        {{ $worker['active_download_count'] }} Active
-                                    </span>
-                                @else
-                                    <span class="text-gray-400">0</span>
-                                @endif
-                            </td>
-                            <td class="py-2 max-w-xs truncate">
-                                @if (!empty($camera->last_error))
-                                    <span class="text-red-600 text-xs" title="{{ $camera->last_error }}">
-                                        <i class="fas fa-exclamation-circle mr-1"></i>
-                                        {{ Str::limit($camera->last_error, 30) }}
-                                    </span>
-                                @else
-                                    <span class="text-gray-400">-</span>
-                                @endif
-                            </td>
-                            <td class="py-2">
-                                <div class="flex gap-1">
-                                    <button data-id="{{ $camera->id }}"
-                                            class="check-camera px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded"
-                                            title="Check Camera">
-                                        <i class="fas fa-sync"></i>
-                                    </button>
-                                    <button data-id="{{ $camera->id }}"
-                                            class="restart-worker px-2 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded"
-                                            title="Restart Worker">
-                                        <i class="fas fa-redo"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
         </div>
     </div>
 
@@ -306,9 +196,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
 
 <script>
-    window.workerStatus = {!! json_encode($worker_status) !!};
-    console.log(window.workerStatus);
-
     $(document).ready(function() {
         // Check camera connection
         $('.check-camera').click(function() {
@@ -339,26 +226,6 @@
                     button.html('<i class="fas fa-sync"></i>');
                 }
             });
-        });
-
-        // Restart worker
-        $('.restart-worker').click(function() {
-            const cameraId = $(this).data('id');
-            const button = $(this);
-
-            if (!confirm('Restart worker for this camera? Active downloads will be paused.')) {
-                return;
-            }
-
-            button.prop('disabled', true);
-            button.html('<i class="fas fa-spinner fa-spin"></i>');
-
-            // For demo purposes, just show success
-            setTimeout(function() {
-                toastr.success('Worker restart triggered (demo)');
-                button.prop('disabled', false);
-                button.html('<i class="fas fa-redo"></i>');
-            }, 1000);
         });
 
         // Check all cameras
