@@ -12,7 +12,7 @@
     <!-- ===================== -->
     <!-- SUMMARY STAT CARDS -->
     <!-- ===================== -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4">
         <!-- Total Cameras -->
         <div class="bg-white rounded-xl shadow-sm p-4 flex justify-between items-center">
             <div>
