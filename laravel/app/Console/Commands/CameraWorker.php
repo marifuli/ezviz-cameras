@@ -66,6 +66,9 @@ class CameraWorker extends Command
 
     private function processDownload(FileDownloadJob $job)
     {
+        $job->update([
+            'start_time' => now()
+        ]);
         $target = public_path($job->download_path);
         
         // Build command
@@ -105,6 +108,6 @@ class CameraWorker extends Command
         pclose($process);
         
         // Mark as complete
-        $job->update(['status' => 'completed', 'progress' => 100]);
+        $job->update(['status' => 'completed', 'progress' => 100, 'end_time' => now()]);
     }
 }
