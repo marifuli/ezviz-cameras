@@ -15,9 +15,9 @@ Schedule::job(CheckCameraFootageStatus::class)->everyTenMinutes();
 Artisan::command('generate_supervisor_configs', function () {
     foreach (Camera::get() as $camera) {
         $config = "[program:camera-{$camera->id}]
-command=/usr/bin/php /home/ariful/ezviz-cameras/laravel/artisan camera:work {$camera->id}}
-directory=/var/www/html
-user=www-data
+command=/usr/bin/php /home/ariful/ezviz-cameras/laravel/artisan camera:work {$camera->id}
+directory=/home/ariful/ezviz-cameras/laravel
+user=root
 autostart=true
 autorestart=true
 startretries=3
