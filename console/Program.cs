@@ -5,9 +5,10 @@ using System.Linq;  // Add this for Skip()
 using System.IO;    // Add this for file operations
 using System.Threading; // Add this for Thread.Sleep
 using System.Diagnostics;
+using System.Threading.Tasks;
+using ConsoleApp.Services;
 
-
-namespace MyDotNetService
+namespace ConsoleApp
 {
     class Program
     {
@@ -37,14 +38,12 @@ namespace MyDotNetService
             {
                 switch (command)
                 {
-                    case "greet":
-                        return HandleGreet(filteredArgs);
-                    
-                    case "calculate":
-                        return HandleCalculate(filteredArgs);
+                    case "camera":
+                        return HandleCamera(filteredArgs).Result;
                     
                     default:
                         Console.WriteLine($"Unknown command: {command}");
+                        Console.WriteLine("Available commands: camera");
                         return 1;
                 }
             }
@@ -55,83 +54,174 @@ namespace MyDotNetService
             }
         }
 
-        // Rest of your command handlers remain the same...
-        static int HandleGreet(string[] args)
+        // Camera service handler
+        static async Task<int> HandleCamera(string[] args)
         {
-            // Default values
-            string name = "World";
-            int times = 1;
-            bool shout = false;
-
-            // Parse flags (starting from index 1 since index 0 is the command)
-            for (int i = 1; i < args.Length; i++)
+            if (args.Length < 2)
             {
-                switch (args[i])
+                Console.WriteLine("Camera command usage:");
+                Console.WriteLine("  camera test <ip> [port] [username] [password]   - Test camera connection");
+                Console.WriteLine("  camera list <ip> [port] [username] [password] <start> <end> <savepath>  - Get video file list");
+                Console.WriteLine("  camera download <ip> [port] [username] [password] <filename> <savepath>  - Download file");
+                return 1;
+            }
+
+            string subCommand = args[1].ToLower();
+
+            try
+            {
+                switch (subCommand)
                 {
-                    case "--name":
-                    case "-n":
-                        if (i + 1 < args.Length) name = args[++i];
-                        break;
-                    
-                    case "--times":
-                    case "-t":
-                        if (i + 1 < args.Length && int.TryParse(args[++i], out int t))
-                            times = t;
-                        break;
-                    
-                    case "--shout":
-                    case "-s":
-                        shout = true;
-                        break;
-                    
-                    case "--help":
-                    case "-h":
-                        Console.WriteLine("greet command options:");
-                        Console.WriteLine("  --name, -n <name>  : Name to greet (default: World)");
-                        Console.WriteLine("  --times, -t <num>  : Number of times to greet (default: 1)");
-                        Console.WriteLine("  --shout, -s        : Shout the greeting in uppercase");
-                        return 0;
+                    case "test":
+                        return await HandleCameraTest(args);
+
+                    case "list":
+                        return await HandleCameraList(args);
+
+                    case "download":
+                        return await HandleCameraDownload(args);
+
+                    default:
+                        Console.WriteLine($"Unknown camera subcommand: {subCommand}");
+                        return 1;
                 }
             }
-
-            // Perform the greeting
-            for (int i = 0; i < times; i++)
+            catch (Exception ex)
             {
-                string greeting = $"Hello, {name}!";
-                if (shout)
-                    greeting = greeting.ToUpper();
-                
-                Console.WriteLine(greeting);
-                
-                // Simulate some work
-                System.Threading.Thread.Sleep(500);
+                Console.WriteLine($"Camera command error: {ex.Message}");
+                return 1;
             }
-            return 0;
         }
 
-        // Add the other handlers here (calculate, file, monitor)...
-        static int HandleCalculate(string[] args)
+        static async Task<int> HandleCameraTest(string[] args)
         {
-           string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            HikApi.SetLibraryPath(currentDirectory);
-            Console.WriteLine(currentDirectory);
+            if (args.Length < 3)
+            {
+                Console.WriteLine("Usage: camera test <ip> [port] [username] [password]");
+                return 1;
+            }
 
-            HikApi.Initialize(
-                logLevel: 3, 
-                logDirectory: "logs", 
-                autoDeleteLogs: true,
-                waitTimeMilliseconds: 5000, // Increase timeout for better reliability
-                forceReinitialization: true // Force reinitialization to ensure clean state
+            var credentials = new CameraService.CameraCredentials
+            {
+                IpAddress = args[2],
+                Port = args.Length > 3 && int.TryParse(args[3], out int port) ? port : 8000,
+                Username = args.Length > 4 ? args[4] : "admin",
+                Password = args.Length > 5 ? args[5] : ""
+            };
+
+            var cameraService = new CameraService();
+            var result = await cameraService.CheckCameraConnectionAsync(credentials);
+
+            if (result.IsSuccess)
+            {
+                Console.WriteLine($"✅ {result.Message}");
+                foreach (var channel in result.ChannelInfo)
+                {
+                    Console.WriteLine($"   📹 {channel}");
+                }
+                return 0;
+            }
+            else
+            {
+                Console.WriteLine($"❌ {result.Message}");
+                return 1;
+            }
+        }
+
+        static async Task<int> HandleCameraList(string[] args)
+        {
+            if (args.Length < 7)
+            {
+                Console.WriteLine("Usage: camera list <ip> [port] [username] [password] <start_datetime> <end_datetime> <savepath>");
+                Console.WriteLine("Example: camera list 192.168.1.100 8000 admin password123 \"2024-01-01 00:00:00\" \"2024-01-01 23:59:59\" \"video_list.json\"");
+                return 1;
+            }
+
+            var credentials = new CameraService.CameraCredentials
+            {
+                IpAddress = args[2],
+                Port = args.Length > 3 && int.TryParse(args[3], out int port) ? port : 8000,
+                Username = args.Length > 4 ? args[4] : "admin",
+                Password = args.Length > 5 ? args[5] : ""
+            };
+
+            if (!DateTime.TryParse(args[args.Length - 3], out DateTime startTime))
+            {
+                Console.WriteLine("Invalid start datetime format");
+                return 1;
+            }
+
+            if (!DateTime.TryParse(args[args.Length - 2], out DateTime endTime))
+            {
+                Console.WriteLine("Invalid end datetime format");
+                return 1;
+            }
+
+            string savePath = args[args.Length - 1];
+
+            var cameraService = new CameraService();
+            var result = await cameraService.GetVideoFileListAsync(credentials, startTime, endTime, savePath);
+
+            if (result.IsSuccess)
+            {
+                Console.WriteLine($"✅ {result.Message}");
+                Console.WriteLine($"   📁 Found {result.FileCount} video files");
+                Console.WriteLine($"   💾 List saved to: {result.SavedToPath}");
+                return 0;
+            }
+            else
+            {
+                Console.WriteLine($"❌ {result.Message}");
+                return 1;
+            }
+        }
+
+        static async Task<int> HandleCameraDownload(string[] args)
+        {
+            if (args.Length < 6)
+            {
+                Console.WriteLine("Usage: camera download <ip> [port] [username] [password] <filename> <savepath>");
+                Console.WriteLine("Example: camera download 192.168.1.100 8000 admin password123 \"video001.h264\" \"downloads/video001.mp4\"");
+                return 1;
+            }
+
+            var credentials = new CameraService.CameraCredentials
+            {
+                IpAddress = args[2],
+                Port = args.Length > 3 && int.TryParse(args[3], out int port) ? port : 8000,
+                Username = args.Length > 4 ? args[4] : "admin",
+                Password = args.Length > 5 ? args[5] : ""
+            };
+
+            string fileName = args[args.Length - 2];
+            string savePath = args[args.Length - 1];
+
+            var cameraService = new CameraService();
+            
+            Console.WriteLine($"Starting download: {fileName}");
+            Console.WriteLine($"Save to: {savePath}");
+
+            var result = await cameraService.DownloadFileAsync(
+                credentials,
+                fileName,
+                savePath,
+                progress => Console.Write($"\r📥 Progress: {progress}%")
             );
 
-            // // Please update IP Address, port and user credentials
-            var hikApi = HikApi.Login("138.252.14.97", 8010, "admin", "XWBDVR");
-            Console.WriteLine("Login success");
-            var device = hikApi.ConfigService.GetDeviceConfig();
-            Console.WriteLine(JsonConvert.SerializeObject(device, Formatting.Indented));
-            return 0;
-        }
+            Console.WriteLine(); // New line after progress
 
-        // ... add file and monitor handlers here
+            if (result.IsSuccess)
+            {
+                Console.WriteLine($"✅ {result.Message}");
+                Console.WriteLine($"   💾 Downloaded to: {result.DownloadPath}");
+                Console.WriteLine($"   📊 File size: {result.FileSize / 1024 / 1024} MB");
+                return 0;
+            }
+            else
+            {
+                Console.WriteLine($"❌ {result.Message}");
+                return 1;
+            }
+        }
     }
 }
