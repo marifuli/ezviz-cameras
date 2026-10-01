@@ -41,7 +41,7 @@
                     <select id="store_id" name="store_id" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                         <option value="">Select a store</option>
                         @foreach($stores as $store)
-                            <option value="{{ $store->id }}" {{ old('store_id') == $store->id ? 'selected' : '' }}>
+                            <option value="{{ $store->id }}" {{ old('store_id', request('store_id')) == $store->id ? 'selected' : '' }}>
                                 {{ $store->name }}
                             </option>
                         @endforeach

@@ -44,7 +44,7 @@
 
     <div class="bg-white rounded-lg shadow overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table id="storesTable" class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -75,7 +75,7 @@
                                         </div>
                                     </div>
                                     <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900">{{ $store->name }}</div>
+                                        <a href="{{ route('stores.show', $store) }}" class="text-sm font-medium text-blue-600 hover:text-blue-900">{{ $store->name }}</a>
                                         <div class="text-sm text-gray-500">ID: {{ $store->id }}</div>
                                     </div>
                                 </div>
@@ -145,3 +145,20 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    if ($('#storesTable tbody tr').length > 0 && !$('#storesTable tbody tr td[colspan]').length) {
+        $('#storesTable').DataTable({
+            responsive: true,
+            pageLength: 25,
+            order: [[0, 'asc']],
+            columnDefs: [
+                { orderable: false, targets: [4] } // Actions column
+            ]
+        });
+    }
+});
+</script>
+@endpush

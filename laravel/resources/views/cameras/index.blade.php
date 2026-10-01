@@ -6,10 +6,16 @@
 <div class="space-y-6">
     <div class="flex justify-between items-center">
         <h1 class="text-2xl font-semibold text-gray-800">Cameras</h1>
-        <a href="{{ route('cameras.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-            <i class="fas fa-plus mr-2"></i>
-            Add Camera
-        </a>
+        <div class="flex items-center space-x-3">
+            <a href="{{ route('stores.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 shadow-sm">
+                <i class="fas fa-store mr-2 text-gray-500"></i>
+                Stores
+            </a>
+            <a href="{{ route('cameras.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 shadow-sm">
+                <i class="fas fa-plus mr-2"></i>
+                Add Camera
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
@@ -87,7 +93,14 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">{{ $camera->store->name ?? 'No Store' }}</div>
+                                @if($camera->store)
+                                    <a href="{{ route('stores.show', $camera->store) }}" class="text-sm font-medium text-blue-600 hover:text-blue-900 inline-flex items-center">
+                                        <i class="fas fa-store text-gray-400 mr-1.5 text-xs"></i>
+                                        {{ $camera->store->name }}
+                                    </a>
+                                @else
+                                    <span class="text-sm text-gray-400">No Store</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900">{{ $camera->ip_address }}</div>
@@ -133,19 +146,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr>
-                            <td colspan="7" class="px-6 py-12 text-center">
-                                <div class="flex flex-col items-center">
-                                    <i class="fas fa-camera text-gray-400 text-4xl mb-4"></i>
-                                    <h3 class="text-lg font-medium text-gray-900 mb-2">No cameras found</h3>
-                                    <p class="text-gray-500 mb-4">Get started by adding your first camera.</p>
-                                    <a href="{{ route('cameras.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                                        <i class="fas fa-plus mr-2"></i>
-                                        Add Camera
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
+                       
                     @endforelse
                 </tbody>
             </table>

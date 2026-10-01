@@ -22,7 +22,10 @@ class StoreController extends Controller
     public function show($id)
     {
         try {
-            $store = Store::with('cameras')->findOrFail($id);
+            $store = Store::with(['cameras' => function ($query) {
+                $query->orderBy('name');
+            }])->withCount('cameras')->findOrFail($id);
+
             return view('stores.show', compact('store'));
         } catch (\Exception $ex) {
             Log::error("Error getting store {$id}", ['error' => $ex->getMessage()]);
@@ -40,19 +43,19 @@ class StoreController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'nullable|string|max:500',
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:100',
         ]);
 
         try {
-            Store::create([
+            $store = Store::create([
                 'name' => $request->name,
                 'address' => $request->address,
                 'phone' => $request->phone,
                 'email' => $request->email,
             ]);
 
-            Log::info('Created store', ['name' => $request->name]);
+            Log::info('Created store', ['id' => $store->id, 'name' => $request->name]);
             return redirect()->route('stores.index')->with('success', 'Store created successfully.');
         } catch (\Exception $ex) {
             Log::error('Error creating store', ['error' => $ex->getMessage()]);
@@ -76,7 +79,7 @@ class StoreController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'nullable|string|max:500',
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:100',
         ]);
 
@@ -118,3 +121,4 @@ class StoreController extends Controller
         }
     }
 }
+
