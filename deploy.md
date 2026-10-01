@@ -62,7 +62,7 @@ sudo apt install -y php8.2 php8.2-cli php8.2-curl php8.2-mbstring php8.2-xml \
     php8.2-zip php8.2-sqlite3 php8.2-bcmath composer
 
 # Install .NET SDK 6.0 or 8.0
-sudo apt install -y dotnet-sdk-8.0
+sudo apt install -y dotnet-sdk-6.0
 ```
 
 ### 3.2. Clone & Build the .NET Console Application
@@ -159,7 +159,7 @@ wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-mi
 sudo dpkg -i packages-microsoft-prod.deb
 rm packages-microsoft-prod.deb
 sudo apt update
-sudo apt install -y dotnet-sdk-8.0
+sudo apt install -y dotnet-sdk-6.0
 
 # Install OpenSSL 1.1 / OpenAL compatibility libraries (needed for native Hikvision SDK)
 sudo apt install -y libssl-dev libopenal1
@@ -171,12 +171,12 @@ sudo apt install -y libssl-dev libopenal1
 
 ```bash
 # Create project folder
-sudo mkdir -p /var/www/ezviz-cameras
-sudo chown -R $USER:www-data /var/www/ezviz-cameras
+sudo mkdir -p /var/www/stex-cameras
+sudo chown -R $USER:www-data /var/www/stex-cameras
 
 # Clone repo
-git clone <your-git-repo-url> /var/www/ezviz-cameras
-cd /var/www/ezviz-cameras
+git clone <your-git-repo-url> /var/www/stex-cameras
+cd /var/www/stex-cameras
 ```
 
 ---
@@ -184,12 +184,12 @@ cd /var/www/ezviz-cameras
 ### Step 3: Build the .NET Console Engine
 
 ```bash
-cd /var/www/ezviz-cameras/console-app
-dotnet publish -c Release -o /var/www/ezviz-cameras/console-app/publish
+cd /var/www/stex-cameras/console-app
+dotnet publish -c Release -o /var/www/stex-cameras/console-app/publish
 
 # Ensure native Hikvision shared libraries (.so) have execute permissions
-chmod +x /var/www/ezviz-cameras/Hik.Api/HikvisionSDK/*.so*
-chmod +x /var/www/ezviz-cameras/Hik.Api/HikvisionSDK/HCNetSDKCom/*.so*
+chmod +x /var/www/stex-cameras/Hik.Api/HikvisionSDK/*.so*
+chmod +x /var/www/stex-cameras/Hik.Api/HikvisionSDK/HCNetSDKCom/*.so*
 ```
 
 ---
@@ -197,7 +197,7 @@ chmod +x /var/www/ezviz-cameras/Hik.Api/HikvisionSDK/HCNetSDKCom/*.so*
 ### Step 4: Configure Laravel for Production
 
 ```bash
-cd /var/www/ezviz-cameras/laravel
+cd /var/www/stex-cameras/laravel
 
 # Install production dependencies
 composer install --no-dev --optimize-autoloader
@@ -247,7 +247,7 @@ sudo mysql -u root -e "GRANT ALL PRIVILEGES ON ezviz_cameras.* TO 'ezviz_user'@'
 
 Run database migrations:
 ```bash
-cd /var/www/ezviz-cameras/laravel
+cd /var/www/stex-cameras/laravel
 php artisan migrate --force
 ```
 
@@ -269,18 +269,18 @@ exit
 ### Step 6: File Permissions & Directory Setup
 
 ```bash
-cd /var/www/ezviz-cameras/laravel
+cd /var/www/stex-cameras/laravel
 
 # Create download directory
 mkdir -p public/downloads storage/logs storage/framework/{cache,sessions,views}
 
 # Set permissions
-sudo chown -R www-data:www-data /var/www/ezviz-cameras/laravel/storage
-sudo chown -R www-data:www-data /var/www/ezviz-cameras/laravel/bootstrap/cache
-sudo chown -R www-data:www-data /var/www/ezviz-cameras/laravel/public/downloads
-sudo chmod -R 775 /var/www/ezviz-cameras/laravel/storage
-sudo chmod -R 775 /var/www/ezviz-cameras/laravel/bootstrap/cache
-sudo chmod -R 775 /var/www/ezviz-cameras/laravel/public/downloads
+sudo chown -R www-data:www-data /var/www/stex-cameras/laravel/storage
+sudo chown -R www-data:www-data /var/www/stex-cameras/laravel/bootstrap/cache
+sudo chown -R www-data:www-data /var/www/stex-cameras/laravel/public/downloads
+sudo chmod -R 775 /var/www/stex-cameras/laravel/storage
+sudo chmod -R 775 /var/www/stex-cameras/laravel/bootstrap/cache
+sudo chmod -R 775 /var/www/stex-cameras/laravel/public/downloads
 
 # Optimize config and route cache
 php artisan config:cache
@@ -296,7 +296,7 @@ php artisan view:cache
 Create an Nginx configuration file:
 
 ```bash
-sudo nano /etc/nginx/sites-available/ezviz-cameras.conf
+sudo nano /etc/nginx/sites-available/stex-cameras.conf
 ```
 
 Add the configuration:
@@ -306,7 +306,7 @@ server {
     listen 80;
     listen [::]:80;
     server_name your-domain.com; # Replace with your domain or VPS IP
-    root /var/www/ezviz-cameras/laravel/public;
+    root /var/www/stex-cameras/laravel/public;
 
     add_header X-Frame-Options "SAMEORIGIN";
     add_header X-Content-Type-Options "nosniff";
@@ -318,7 +318,7 @@ server {
 
     # Video downloads location
     location /downloads/ {
-        alias /var/www/ezviz-cameras/laravel/public/downloads/;
+        alias /var/www/stex-cameras/laravel/public/downloads/;
         autoindex off;
         sendfile on;
         tcp_nopush on;
@@ -348,7 +348,7 @@ server {
 
 Enable site and restart Nginx:
 ```bash
-sudo ln -s /etc/nginx/sites-available/ezviz-cameras.conf /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/stex-cameras.conf /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -370,7 +370,7 @@ sudo crontab -e -u www-data
 
 Add the Laravel scheduler entry:
 ```cron
-* * * * * cd /var/www/ezviz-cameras/laravel && /usr/bin/php artisan schedule:run >> /dev/null 2>&1
+* * * * * cd /var/www/stex-cameras/laravel && /usr/bin/php artisan schedule:run >> /dev/null 2>&1
 ```
 
 The scheduler automatically runs:
@@ -388,14 +388,14 @@ Create `/etc/supervisor/conf.d/laravel-queue.conf`:
 ```ini
 [program:laravel-queue]
 process_name=%(program_name)s_%(process_num)02d
-command=/usr/bin/php /var/www/ezviz-cameras/laravel/artisan queue:work --sleep=3 --tries=3 --max-time=3600
-directory=/var/www/ezviz-cameras/laravel
+command=/usr/bin/php /var/www/stex-cameras/laravel/artisan queue:work --sleep=3 --tries=3 --max-time=3600
+directory=/var/www/stex-cameras/laravel
 autostart=true
 autorestart=true
 user=www-data
 numprocs=2
 redirect_stderr=true
-stdout_logfile=/var/www/ezviz-cameras/laravel/storage/logs/queue.log
+stdout_logfile=/var/www/stex-cameras/laravel/storage/logs/queue.log
 stopwaitsecs=3600
 ```
 
@@ -404,15 +404,15 @@ The system runs a dedicated worker daemon for each camera (`php artisan camera:w
 
 Generate supervisor configs automatically for all registered cameras:
 ```bash
-cd /var/www/ezviz-cameras/laravel
+cd /var/www/stex-cameras/laravel
 sudo php artisan generate_supervisor_configs
 ```
 
 Or manually create individual supervisor configs (e.g. `/etc/supervisor/conf.d/camera-1.conf`):
 ```ini
 [program:camera-1]
-command=/usr/bin/php /var/www/ezviz-cameras/laravel/artisan camera:work 1
-directory=/var/www/ezviz-cameras/laravel
+command=/usr/bin/php /var/www/stex-cameras/laravel/artisan camera:work 1
+directory=/var/www/stex-cameras/laravel
 user=www-data
 autostart=true
 autorestart=true
@@ -420,7 +420,7 @@ startretries=3
 stopwaitsecs=30
 stopsignal=TERM
 redirect_stderr=true
-stdout_logfile=/var/www/ezviz-cameras/laravel/storage/logs/camera-1.log
+stdout_logfile=/var/www/stex-cameras/laravel/storage/logs/camera-1.log
 stdout_logfile_maxbytes=50MB
 stdout_logfile_backups=5
 ```
@@ -456,17 +456,17 @@ sudo ufw enable
 
 1. **Verify Camera CLI Connectivity**:
    ```bash
-   dotnet /var/www/ezviz-cameras/console-app/publish/ConsoleApp.dll camera test <camera-ip> 8000 <username> <password>
+   dotnet /var/www/stex-cameras/console-app/publish/ConsoleApp.dll camera test <camera-ip> 8000 <username> <password>
    ```
 2. **Verify Camera Worker**:
    ```bash
-   php /var/www/ezviz-cameras/laravel/artisan camera:work <camera-id>
+   php /var/www/stex-cameras/laravel/artisan camera:work <camera-id>
    ```
 3. **Check Logs**:
-   - Web application logs: `/var/www/ezviz-cameras/laravel/storage/logs/laravel.log`
+   - Web application logs: `/var/www/stex-cameras/laravel/storage/logs/laravel.log`
    - Log Viewer Web Interface: `https://your-domain.com/log-viewer`
-   - Camera Worker logs: `/var/www/ezviz-cameras/laravel/storage/logs/camera-<id>.log`
-   - Queue worker logs: `/var/www/ezviz-cameras/laravel/storage/logs/queue.log`
+   - Camera Worker logs: `/var/www/stex-cameras/laravel/storage/logs/camera-<id>.log`
+   - Queue worker logs: `/var/www/stex-cameras/laravel/storage/logs/queue.log`
    - Nginx error logs: `/var/log/nginx/error.log`
 
 ---
@@ -475,7 +475,7 @@ sudo ufw enable
 
 ```bash
 # Restart queue workers after updating code
-cd /var/www/ezviz-cameras/laravel
+cd /var/www/stex-cameras/laravel
 php artisan queue:restart
 
 # Clear and rebuild Laravel cache
