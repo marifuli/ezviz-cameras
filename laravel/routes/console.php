@@ -15,8 +15,8 @@ Schedule::job(CheckCameraFootageStatus::class)->everyTenMinutes();
 Artisan::command('generate_supervisor_configs', function () {
     foreach (Camera::get() as $camera) {
         $config = "[program:camera-{$camera->id}]
-command=/usr/bin/php /home/ariful/stex-cameras/laravel/artisan camera:work {$camera->id}
-directory=/home/ariful/stex-cameras/laravel
+command=/usr/bin/php /var/www/stex-cameras/laravel/artisan camera:work {$camera->id}
+directory=/var/www/stex-cameras/laravel
 user=root
 autostart=true
 autorestart=true
@@ -24,7 +24,7 @@ startretries=3
 stopwaitsecs=30
 stopsignal=TERM
 redirect_stderr=true
-stdout_logfile=/home/ariful/stex-cameras/laravel/storage/logs/camera-{$camera->id}.log
+stdout_logfile=/var/www/stex-cameras/laravel/storage/logs/camera-{$camera->id}.log
 stdout_logfile_maxbytes=50MB
 stdout_logfile_backups=5
     ";
